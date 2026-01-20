@@ -1,0 +1,1 @@
+<img src="{{ asset('assets/img/logo.png') }}" alt="St. Michael the Archangel Parish Church" class="w-12 h-12 rounded-full">
