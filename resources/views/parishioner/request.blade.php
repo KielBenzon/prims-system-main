@@ -252,7 +252,7 @@
                                                             class="input input-bordered w-full"
                                                             required>
                                                     </div>
-                                                    <div class="text-base font-medium text-gray-900 dark:text-white">
+                                                    <div class="text-base font-medium text-black" style="color: black !important;">
                                                         Total: ₱ <span id="total-amount">0</span>
                                                     </div>
                                                 </div>
@@ -261,7 +261,7 @@
                                             <hr class="my-4">
 
                                             <!-- Modal Actions -->
-                                            <div class="flex justify-end">
+                                            <div class="flex justify-end gap-2">
                                                 <button
     class="btn bg-gray-200 hover:bg-gray-300 text-black border-0"
     type="button"
@@ -582,41 +582,24 @@
                                 class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Place of Birth: </label>
-                            <input type="text" name="confirmation_place_of_birth" placeholder="Place of Birth"
+                            <label class="block text-gray-700 font-medium">Date of Birth: </label>
+                            <input type="date" name="confirmation_date_of_birth" placeholder="Date of Birth"
                                 class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Baptism: </label>
-                            <input type="date" name="confirmation_date_of_baptism" placeholder="Date of Baptism"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Fathers Name: </label>
-                            <input type="text" name="confirmation_fathers_name" placeholder="Fathers Name"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Mothers Name: </label>
-                            <input type="text" name="confirmation_mothers_name" placeholder="Mothers Name"
-                                class="input input-bordered w-full">
-                        </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Date of Confirmation: </label>
                             <input type="date" name="confirmation_date_of_confirmation"
                                 placeholder="Date of Confirmation" class="input input-bordered w-full">
                         </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Upload Confirmation Document: </label>
+                            <input type="file" name="file_confirmation"
+                                class="file-input file-input-bordered w-full" accept="image/*,.pdf">
+                        </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Confirmation Sponsors Name: </label>
-                            <input type="text" name="confirmation_sponsors_name"
-                                placeholder="Confirmation Sponsors Name" class="input input-bordered w-full">
-                        </div>
                         <!-- Gmail -->
         <div class="sm:col-span-3">
             <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
@@ -822,7 +805,7 @@
                                                             class="input input-bordered w-full"
                                                             required>
                                                     </div>
-                                                    <div class="text-base font-medium text-gray-900 dark:text-white">
+                                                    <div class="text-base font-medium text-black" style="color: black !important;">
                                                         Total: ₱ <span id="total-amount">0</span>
                                                     </div>
                                                 </div>
@@ -831,7 +814,7 @@
                                             <hr class="my-4">
 
                                             <!-- Modal Actions -->
-                                            <div class="flex justify-end">
+                                            <div class="flex justify-end gap-2">
                                                 <button
     class="btn bg-gray-200 hover:bg-gray-300 text-black border-0"
     type="button"
@@ -1260,106 +1243,53 @@
                                                 <div class="sm:col-span-3">
                                                     <label
                                                         class="input input-bordered flex items-center gap-2">
-                                                        First Name:
-                                                        <input type="text" name="confirmation_first_name"
+                                                        Name of Confirmand:
+                                                        <input type="text" name="name_of_confirmand"
                                                             class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_first_name ?? '' }}"
+                                                            value="{{ $request->certificate_detail->name_of_confirmand ?? '' }}"
                                                             readonly />
                                                     </label>
                                                 </div>
                                                 <div class="sm:col-span-3">
                                                     <label
                                                         class="input input-bordered flex items-center gap-2">
-                                                        Middle Name:
-                                                        <input type="text" name="confirmation_middle_name"
+                                                        Date of Birth:
+                                                        <input type="date" name="date_of_birth_confirmand"
                                                             class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_middle_name ?? '' }}"
+                                                            value="{{ $request->certificate_detail->date_of_birth_confirmand ?? '' }}"
                                                             readonly />
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                                <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Last Name:
-                                                        <input type="text" name="confirmation_last_name"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_last_name ?? '' }}"
-                                                            readonly />
-                                                    </label>
-                                                </div>
-                                                <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Place of Birth:
-                                                        <input type="text"
-                                                            name="confirmation_place_of_birth"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_place_of_birth ?? '' }}"
-                                                            readonly />
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                                <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Date of Baptism:
-                                                        <input type="date"
-                                                            name="confirmation_date_of_baptism"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_date_of_baptism ?? '' }}"
-                                                            readonly />
-                                                    </label>
-                                                </div>
-                                                <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Fathers Name:
-                                                        <input type="text" name="confirmation_fathers_name"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_fathers_name ?? '' }}"
-                                                            readonly />
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                                <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Mothers Name:
-                                                        <input type="text" name="confirmation_mothers_name"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_mothers_name ?? '' }}"
-                                                            readonly />
-                                                    </label>
-                                                </div>
                                                 <div class="sm:col-span-3">
                                                     <label
                                                         class="input input-bordered flex items-center gap-2">
                                                         Date of Confirmation:
-                                                        <input type="date"
-                                                            name="confirmation_date_of_confirmation"
+                                                        <input type="date" name="date_of_confirmation"
                                                             class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_date_of_confirmation ?? '' }}"
+                                                            value="{{ $request->certificate_detail->date_of_confirmation ?? '' }}"
                                                             readonly />
                                                     </label>
                                                 </div>
-                                            </div>
-                                            <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                 <div class="sm:col-span-3">
-                                                    <label
-                                                        class="input input-bordered flex items-center gap-2">
-                                                        Sponsors Name:
-                                                        <input type="text"
-                                                            name="confirmation_sponsors_name"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
-                                                            value="{{ $request->certificate_detail->confirmation_sponsors_name ?? '' }}"
-                                                            readonly />
-                                                    </label>
+                                                    @if($request->certificate_detail->file_confirmation ?? null)
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-900 mb-2">Confirmation Document:</p>
+                                                            <img src="{{ $request->certificate_detail->file_confirmation }}" 
+                                                                 alt="Confirmation Certificate" 
+                                                                 class="max-w-full rounded border border-gray-300"
+                                                                 style="max-height: 300px; object-fit: contain;">
+                                                        </div>
+                                                    @else
+                                                        <label class="input input-bordered flex items-center gap-2">
+                                                            Confirmation Document:
+                                                            <span class="grow text-gray-500">No file uploaded</span>
+                                                        </label>
+                                                    @endif
                                                 </div>
                                             </div>
+                                        </div>
                                             @endif
                                             <hr class="my-4">
                                             <div class="flex justify-end">
@@ -1552,8 +1482,8 @@
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Bride: </label>
-                            <input type="text" id="age_bride" name="age_bride" placeholder="Age of Bride"
-                                class="input input-bordered w-full required">
+                            <input type="number" id="age_bride" name="age_bride" placeholder="Age of Bride"
+                                min="18" max="120" class="input input-bordered w-full required">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthplace of Bride: </label>
@@ -1623,8 +1553,8 @@
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Groom: </label>
-                            <input type="text" id="age_groom" name="age_groom" placeholder="Age of Groom"
-                                class="input input-bordered w-full required">
+                            <input type="number" id="age_groom" name="age_groom" placeholder="Age of Groom"
+                                min="18" max="120" class="input input-bordered w-full required">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthplace of Groom: </label>
@@ -1761,51 +1691,34 @@
                                 class="input input-bordered w-full required">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Place of Birth: </label>
-                            <input type="text" name="confirmation_place_of_birth" placeholder="Place of Birth"
+                            <label class="block text-gray-700 font-medium">Date of Birth: </label>
+                            <input type="date" name="confirmation_date_of_birth" placeholder="Date of Birth"
                                 class="input input-bordered w-full required">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Baptism: </label>
-                            <input type="date" name="confirmation_date_of_baptism" placeholder="Date of Baptism"
-                                class="input input-bordered w-full required">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Fathers Name: </label>
-                            <input type="text" name="confirmation_fathers_name" placeholder="Fathers Name"
-                                class="input input-bordered w-full required">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Mothers Name: </label>
-                            <input type="text" name="confirmation_mothers_name" placeholder="Mothers Name"
-                                class="input input-bordered w-full required">
-                        </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Date of Confirmation: </label>
                             <input type="date" name="confirmation_date_of_confirmation"
                                 placeholder="Date of Confirmation" class="input input-bordered w-full required">
                         </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Upload Confirmation Document: </label>
+                            <input type="file" name="file_confirmation"
+                                class="file-input file-input-bordered w-full" accept="image/*,.pdf">
+                        </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Confirmation Sponsors Name: </label>
-                            <input type="text" name="confirmation_sponsors_name"
-                                placeholder="Confirmation Sponsors Name" class="input input-bordered w-full required">
-                        </div>
                         <!-- Gmail -->
-        <div class="sm:col-span-3">
-            <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
-            <input type="email" 
-                   name="gmail" 
-                   id="gmail"
-                   placeholder="Enter your Gmail"
-                   class="input input-bordered w-full" 
-                   value="{{ old('gmail', $request->user->email ?? '') }}" />
-        </div>
+                        <div class="sm:col-span-3">
+                            <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
+                            <input type="email" 
+                                   name="gmail" 
+                                   id="gmail"
+                                   placeholder="Enter your Gmail"
+                                   class="input input-bordered w-full" 
+                                   value="{{ old('gmail', $request->user->email ?? '') }}" />
+                        </div>
                     </div>
                 </div>
                 <hr class="my-4">
@@ -1893,7 +1806,7 @@ document.getElementById('addRequestForm').addEventListener('submit', function(e)
     } else if(docType === 'Death Certificate') {
         requiredFields = ['first_name_death','middle_name_death','last_name_death','date_of_birth_death','date_of_death','file_death'];
     } else if(docType === 'Confirmation Certificate') {
-        requiredFields = ['confirmation_first_name','confirmation_middle_name','confirmation_last_name','confirmation_place_of_birth','confirmation_date_of_baptism','confirmation_fathers_name','confirmation_mothers_name'];
+        requiredFields = ['confirmation_first_name','confirmation_middle_name','confirmation_last_name','confirmation_date_of_birth','confirmation_date_of_confirmation'];
     }
 
     let valid = true;

@@ -134,17 +134,24 @@ class RequestService
                     }
                 }
             } elseif ($request->document_type == 'Marriage Certificate') {
+                Log::info('Processing Marriage Certificate request');
                 try {
                     // Combine bride name fields
                     $brideName = trim(($request->bride_first_name ?? '') . ' ' . ($request->bride_middle_name ?? '') . ' ' . ($request->bride_last_name ?? ''));
                     // Combine groom name fields
                     $groomName = trim(($request->groom_first_name ?? '') . ' ' . ($request->groom_middle_name ?? '') . ' ' . ($request->groom_last_name ?? ''));
                     
+                    Log::info('Marriage details', ['bride' => $brideName, 'groom' => $groomName]);
+                    
+                    // Convert age to integer, handle invalid input
+                    $ageBride = is_numeric($request->age_bride) ? (int)$request->age_bride : null;
+                    $ageGroom = is_numeric($request->age_groom) ? (int)$request->age_groom : null;
+                    
                     CertificateDetail::create([
                     'request_id' => $createdRequest->id,  // Link to the main request
                     'certificate_type' => $request->document_type,
                     'bride_name' => $brideName,
-                    'age_bride' => $request->age_bride ?? null,
+                    'age_bride' => $ageBride,
                     'birthdate_bride' => $request->birthdate_bride ?? null,
                     'birthplace_bride' => $request->birthplace_bride ?? null,
                     'citizenship_bride' => $request->citizenship_bride ?? null,
@@ -154,7 +161,7 @@ class RequestService
                     'name_of_father_bride' => $request->name_of_father_bride ?? null,
                     'name_of_mother_bride' => $request->name_of_mother_bride ?? null,
                     'name_of_groom' => $groomName,
-                    'age_groom' => $request->age_groom ?? null,
+                    'age_groom' => $ageGroom,
                     'birthdate_groom' => $request->birthdate_groom ?? null,
                     'birthplace_groom' => $request->birthplace_groom ?? null,
                     'citizenship_groom' => $request->citizenship_groom ?? null,
@@ -166,6 +173,46 @@ class RequestService
                 ]);
                 } catch (Exception $e) {
                     Log::warning('Failed to create marriage certificate details: ' . $e->getMessage());
+                    
+                    // Try Supabase fallback
+                    try {
+                        $supabaseService = new SupabaseService();
+                        $brideName = trim(($request->bride_first_name ?? '') . ' ' . ($request->bride_middle_name ?? '') . ' ' . ($request->bride_last_name ?? ''));
+                        $groomName = trim(($request->groom_first_name ?? '') . ' ' . ($request->groom_middle_name ?? '') . ' ' . ($request->groom_last_name ?? ''));
+                        
+                        // Convert age to integer, handle invalid input
+                        $ageBride = is_numeric($request->age_bride) ? (int)$request->age_bride : null;
+                        $ageGroom = is_numeric($request->age_groom) ? (int)$request->age_groom : null;
+                        
+                        $certificateData = [
+                            'request_id' => $createdRequest->id,
+                            'certificate_type' => $request->document_type,
+                            'bride_name' => $brideName,
+                            'age_bride' => $ageBride,
+                            'birthdate_bride' => $request->birthdate_bride ?? null,
+                            'birthplace_bride' => $request->birthplace_bride ?? null,
+                            'citizenship_bride' => $request->citizenship_bride ?? null,
+                            'religion_bride' => $request->religion_bride ?? null,
+                            'residence_bride' => $request->residence_bride ?? null,
+                            'civil_status_bride' => $request->civil_status_bride ?? null,
+                            'name_of_father_bride' => $request->name_of_father_bride ?? null,
+                            'name_of_mother_bride' => $request->name_of_mother_bride ?? null,
+                            'name_of_groom' => $groomName,
+                            'age_groom' => $ageGroom,
+                            'birthdate_groom' => $request->birthdate_groom ?? null,
+                            'birthplace_groom' => $request->birthplace_groom ?? null,
+                            'citizenship_groom' => $request->citizenship_groom ?? null,
+                            'religion_groom' => $request->religion_groom ?? null,
+                            'residence_groom' => $request->residence_groom ?? null,
+                            'civil_status_groom' => $request->civil_status_groom ?? null,
+                            'name_of_father_groom' => $request->name_of_father_groom ?? null,
+                            'name_of_mother_groom' => $request->name_of_mother_groom ?? null,
+                        ];
+                        $supabaseService->insert('tcertificate_details', $certificateData);
+                        Log::info('Marriage certificate details saved via Supabase fallback');
+                    } catch (Exception $supabaseException) {
+                        Log::error('Supabase marriage certificate fallback failed: ' . $supabaseException->getMessage());
+                    }
                 }
             } elseif ($request->document_type == 'Death Certificate') {
 
@@ -218,25 +265,80 @@ class RequestService
                     ]);
                 } catch (Exception $e) {
                     Log::warning('Failed to create death certificate details: ' . $e->getMessage());
+                    
+                    // Try Supabase fallback
+                    try {
+                        $supabaseService = new SupabaseService();
+                        $certificateData = [
+                            'request_id' => $createdRequest->id,
+                            'certificate_type' => $request->document_type,
+                            'first_name_death' => $request->first_name_death ?? null,
+                            'middle_name_death' => $request->middle_name_death ?? null,
+                            'last_name_death' => $request->last_name_death ?? null,
+                            'date_of_birth_death' => $request->date_of_birth_death ?? null,
+                            'date_of_death' => $request->date_of_death ?? null,
+                            'file_death' => $fileUrl,
+                        ];
+                        $supabaseService->insert('tcertificate_details', $certificateData);
+                        Log::info('Death certificate details saved via Supabase fallback');
+                    } catch (Exception $supabaseException) {
+                        Log::error('Supabase death certificate fallback failed: ' . $supabaseException->getMessage());
+                    }
                 }
 
             } elseif ($request->document_type == 'Confirmation Certificate') {
+                Log::info('Processing Confirmation Certificate request');
+                // Combine name fields into full name
+                $confirmandName = trim(($request->confirmation_first_name ?? '') . ' ' . ($request->confirmation_middle_name ?? '') . ' ' . ($request->confirmation_last_name ?? ''));
+                
+                Log::info('Confirmation details', ['confirmand' => $confirmandName]);
+                
+                // Handle file upload for confirmation certificate
+                $fileUrl = null;
+                if ($request->hasFile('file_confirmation')) {
+                    $file = $request->file('file_confirmation');
+                    
+                    // Upload to Supabase
+                    $storageService = new SupabaseStorageService();
+                    $bucket = env('SUPABASE_STORAGE_BUCKET_REQUESTS', 'requests');
+                    $result = $storageService->upload($file, $bucket, 'confirmation_certificates');
+                    
+                    if ($result['success']) {
+                        $fileUrl = $result['url'];
+                        Log::info('Confirmation certificate uploaded to Supabase', ['url' => $fileUrl]);
+                    } else {
+                        Log::error('Failed to upload confirmation certificate: ' . ($result['error'] ?? 'Unknown error'));
+                    }
+                }
+                
                 try {
                     CertificateDetail::create([
-                        'request_id' => $createdRequest->id,  // Link to the main request
+                        'request_id' => $createdRequest->id,
                         'certificate_type' => $request->document_type,
-                        'confirmation_first_name' => $request->confirmation_first_name ?? null,
-                        'confirmation_middle_name' => $request->confirmation_middle_name ?? null,
-                        'confirmation_last_name' => $request->confirmation_last_name ?? null,
-                        'confirmation_place_of_birth' => $request->confirmation_place_of_birth ?? null,
-                        'confirmation_date_of_baptism' => $request->confirmation_date_of_baptism ?? null,
-                        'confirmation_fathers_name' => $request->confirmation_fathers_name ?? null,
-                        'confirmation_mothers_name' => $request->confirmation_mothers_name ?? null,
-                        'confirmation_date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
-                        'confirmation_sponsors_name' => $request->confirmation_sponsors_name ?? null,
+                        'name_of_confirmand' => $confirmandName,
+                        'date_of_birth_confirmand' => $request->confirmation_date_of_birth ?? null,
+                        'date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
+                        'file_confirmation' => $fileUrl,
                     ]);
                 } catch (Exception $e) {
                     Log::warning('Failed to create confirmation certificate details: ' . $e->getMessage());
+                    
+                    // Try Supabase fallback
+                    try {
+                        $supabaseService = new SupabaseService();
+                        $certificateData = [
+                            'request_id' => $createdRequest->id,
+                            'certificate_type' => $request->document_type,
+                            'name_of_confirmand' => $confirmandName,
+                            'date_of_birth_confirmand' => $request->confirmation_place_of_birth ?? null,
+                            'date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
+                            'file_confirmation' => null,
+                        ];
+                        $supabaseService->insert('tcertificate_details', $certificateData);
+                        Log::info('Confirmation certificate details saved via Supabase fallback');
+                    } catch (Exception $supabaseException) {
+                        Log::error('Supabase confirmation certificate fallback failed: ' . $supabaseException->getMessage());
+                    }
                 }
             }
 
