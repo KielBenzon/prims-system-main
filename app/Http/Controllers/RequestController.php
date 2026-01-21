@@ -176,9 +176,13 @@ class RequestController extends Controller
             }
         }
 
-        $certificate_types = $this->executeWithFallback(function () {
-            return CertificateType::all();
-        }, collect([]));
+        // Certificate types - using fixed values since all are 100.00
+        $certificate_types = collect([
+            'Baptismal Certificate' => 100.00,
+            'Marriage Certificate' => 100.00,
+            'Death Certificate' => 100.00,
+            'Confirmation Certificate' => 100.00
+        ]);
         
         $users = $this->executeWithFallback(function () {
             return User::all();
@@ -375,7 +379,7 @@ class RequestController extends Controller
 
             // Update the payment record first
             if ($req->payment) {
-                $req->payment->payment_status = 'Verified';
+                $req->payment->payment_status = 'Paid';
                 $req->payment->save();
             }
 
@@ -398,7 +402,7 @@ class RequestController extends Controller
                     'Content-Type' => 'application/json'
                 ])->get($supabaseUrl . '/rest/v1/tpayments?request_id=eq.' . $id);
 
-                // Update payment to verified
+                // Update payment to Paid
                 if ($paymentResponse->successful() && !empty($paymentResponse->json())) {
                     $updateResponse = \Illuminate\Support\Facades\Http::withHeaders([
                         'apikey' => $supabaseKey,
@@ -406,7 +410,7 @@ class RequestController extends Controller
                         'Content-Type' => 'application/json',
                         'Prefer' => 'return=representation'
                     ])->patch($supabaseUrl . '/rest/v1/tpayments?request_id=eq.' . $id, [
-                        'payment_status' => 'Verified',
+                        'payment_status' => 'Paid',
                         'updated_at' => now('Asia/Manila')->toIso8601String()
                     ]);
                     

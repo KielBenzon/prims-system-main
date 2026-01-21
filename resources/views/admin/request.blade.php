@@ -189,8 +189,8 @@
                                                                 of Birth</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="date_of_birth"
-                                                                    class=\"input input-bordered w-full max-w-xs bg-white text-black border-gray-300\"
-                                                                    style=\"background-color: white !important; color: black !important;\"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
                                                                     value="{{ $request->certificate_detail->date_of_birth }}"
                                                                     readonly />
                                                             </div>
@@ -201,8 +201,8 @@
                                                                 of Birth</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="place_of_birth"
-                                                                    class=\"input input-bordered w-full max-w-xs bg-white text-black border-gray-300\"
-                                                                    style=\"background-color: white !important; color: black !important;\"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
                                                                     value="{{ $request->certificate_detail->place_of_birth }}"
                                                                     readonly />
                                                             </div>
@@ -215,8 +215,8 @@
                                                                 of Baptism</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="baptism_schedule"
-                                                                    class=\"input input-bordered w-full max-w-xs bg-white text-black border-gray-300\"
-                                                                    style=\"background-color: white !important; color: black !important;\"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
                                                                     value="{{ $request->certificate_detail->baptism_schedule }}"
                                                                     readonly />
                                                             </div>
@@ -597,53 +597,103 @@
                                                 <div class="flex flex-col gap-4">
                                                     <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                         <div class="sm:col-span-3">
-                                                            <label for="name_of_confirmand"
-                                                                class="block text-sm/6 font-medium text-gray-900">Name of Confirmand</label>
+                                                            <label for="confirmation_first_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">First Name</label>
                                                             <div class="mt-2">
-                                                                <input type="text" name="name_of_confirmand"
+                                                                <input type="text" name="confirmation_first_name"
                                                                     class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail->name_of_confirmand ?? '' }}"
+                                                                    value="{{ $request->certificate_detail->confirmation_first_name ?? '' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
                                                         <div class="sm:col-span-3">
-                                                            <label for="date_of_birth_confirmand"
-                                                                class="block text-sm/6 font-medium text-gray-900">Date of Birth</label>
+                                                            <label for="confirmation_middle_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">Middle Name</label>
                                                             <div class="mt-2">
-                                                                <input type="text" name="date_of_birth_confirmand"
+                                                                <input type="text" name="confirmation_middle_name"
                                                                     class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail->date_of_birth_confirmand ?? '' }}"
+                                                                    value="{{ $request->certificate_detail->confirmation_middle_name ?? '' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                         <div class="sm:col-span-3">
-                                                            <label for="date_of_confirmation"
+                                                            <label for="confirmation_last_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">Last Name</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_last_name"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_last_name ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_place_of_birth"
+                                                                class="block text-sm/6 font-medium text-gray-900">Place of Birth</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_place_of_birth"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_place_of_birth ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_date_of_baptism"
+                                                                class="block text-sm/6 font-medium text-gray-900">Date of Baptism</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_date_of_baptism"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_date_of_baptism ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_fathers_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">Fathers Name</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_fathers_name"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_fathers_name ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_mothers_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">Mothers Name</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_mothers_name"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_mothers_name ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_date_of_confirmation"
                                                                 class="block text-sm/6 font-medium text-gray-900">Date of Confirmation</label>
                                                             <div class="mt-2">
-                                                                <input type="text" name="date_of_confirmation"
+                                                                <input type="text" name="confirmation_date_of_confirmation"
                                                                     class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail->date_of_confirmation ?? '' }}"
+                                                                    value="{{ $request->certificate_detail->confirmation_date_of_confirmation ?? '' }}"
                                                                     readonly />
-                                                            </div>
-                                                        </div>
-                                                        <div class="sm:col-span-3">
-                                                            <label for="file_confirmation"
-                                                                class="block text-sm/6 font-medium text-gray-900">Confirmation Document</label>
-                                                            <div class="mt-2">
-                                                                @if($request->certificate_detail->file_confirmation ?? null)
-                                                                    <img src="{{ $request->certificate_detail->file_confirmation }}" 
-                                                                         alt="Confirmation Certificate" 
-                                                                         class="max-w-xs rounded border border-gray-300"
-                                                                         style="max-height: 400px; object-fit: contain;">
-                                                                @else
-                                                                    <p class="text-gray-500">No file uploaded</p>
-                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                                                        <div class="sm:col-span-3">
+                                                            <label for="confirmation_sponsors_name"
+                                                                class="block text-sm/6 font-medium text-gray-900">Confirmation Sponsors Name</label>
+                                                            <div class="mt-2">
+                                                                <input type="text" name="confirmation_sponsors_name"
+                                                                    class="input input-bordered w-full max-w-xs"
+                                                                    value="{{ $request->certificate_detail->confirmation_sponsors_name ?? '' }}"
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
                                                         <div class="sm:col-span-3">
                                                             <label for="gmail"
                                                                 class="block text-sm/6 font-medium text-gray-900">Gmail</label>

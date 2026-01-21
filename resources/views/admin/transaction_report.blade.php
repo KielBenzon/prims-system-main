@@ -22,23 +22,23 @@
 
                     @if(isset($transactions) && count($transactions) > 0)
                         <!-- Totals -->
-                        <div class="mb-3">
+                        <div class="mb-3 text-black">
                             <strong>Total Transactions:</strong> {{ $total_transactions ?? 0 }} <br>
                             <strong>Total Amount:</strong> ₱{{ number_format($total_amount ?? 0, 2) }}
                         </div>
 
                         <!-- Transactions Table -->
-                        <table class="w-full border border-gray-300">
+                        <table class="w-full border-2 border-black text-black">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="border p-2">Fullname</th>
-                                    <th class="border p-2">Amount</th>
-                                    <th class="border p-2">Date and Time</th>
-                                    <th class="border p-2">Transaction Type</th>
-                                    <th class="border p-2">Transaction ID</th>
+                                    <th class="border border-black p-2 text-black">Fullname</th>
+                                    <th class="border border-black p-2 text-black">Amount</th>
+                                    <th class="border border-black p-2 text-black">Date and Time</th>
+                                    <th class="border border-black p-2 text-black">Transaction Type</th>
+                                    <th class="border border-black p-2 text-black" style="max-width: 150px;">Transaction ID</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white">
                                 @foreach ($transactions as $transaction)
                                     @php $transaction = (object) $transaction; @endphp
                                     <tr class="cursor-pointer hover:bg-gray-100"
@@ -49,13 +49,15 @@
                                             '{{ $transaction->transaction_type }}',
                                             '{{ $transaction->transaction_id ?? "" }}'
                                         )">
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $transaction->full_name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">₱{{ number_format($transaction->amount ?? 0, 2) }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="border border-black px-2 py-2 text-black">{{ $transaction->full_name }}</td>
+                                        <td class="border border-black px-2 py-2 text-black">₱{{ number_format($transaction->amount ?? 0, 2) }}</td>
+                                        <td class="border border-black px-2 py-2 text-black">
                                             {{ \Carbon\Carbon::parse($transaction->date ?? now())->format('F d, Y h:i A') }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $transaction->transaction_type }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $transaction->transaction_id }}</td>
+                                        <td class="border border-black px-2 py-2 text-black">{{ $transaction->transaction_type }}</td>
+                                        <td class="border border-black px-2 py-2 text-black" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px;">
+                                            {{ Str::limit($transaction->transaction_id, 40, '...') }}
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -78,25 +80,26 @@
     <!-- Transaction Modal -->
     <div id="transactionModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-lg w-96 p-6 relative">
-            <h2 class="text-xl font-bold mb-4">Transaction Details</h2>
-            <p><strong>Fullname:</strong> <span id="modalFullname"></span></p>
-            <p><strong>Amount:</strong> ₱<span id="modalAmount"></span></p>
-            <p><strong>Date:</strong> <span id="modalDate"></span></p>
-            <p><strong>Type:</strong> <span id="modalType"></span></p>
+            <h2 class="text-xl font-bold mb-4 text-black">Transaction Details</h2>
+            <p class="text-black"><strong>Fullname:</strong> <span id="modalFullname"></span></p>
+            <p class="text-black"><strong>Amount:</strong> ₱<span id="modalAmount"></span></p>
+            <p class="text-black"><strong>Date:</strong> <span id="modalDate"></span></p>
+            <p class="text-black"><strong>Type:</strong> <span id="modalType"></span></p>
 
             <div class="mt-4">
-                <strong>Transaction Proof:</strong>
+                <strong class="text-black">Transaction Proof:</strong>
                 <div id="modalProofContainer" class="mt-2">
                     <img id="modalProof"
                          src=""
                          alt="Transaction Image"
                          class="w-full h-48 object-cover border rounded shadow cursor-pointer hidden"
                          onclick="openImageInNewTab(this.src)">
+                    <p id="noProofMessage" class="text-gray-500 text-sm hidden">No transaction proof available</p>
                 </div>
             </div>
 
             <div class="flex justify-end mt-4">
-                <button class="px-4 py-2 bg-gray-300 text-black rounded hover:bg-red-700 hover:text-white"
+                <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                     type="button" onclick="closeModal()">
                     Close
                 </button>
@@ -106,29 +109,23 @@
 
     <!-- JS Scripts -->
     <script>
-        function showTransactionModal(fullname, amount, date, type, proofFilename) {
+        function showTransactionModal(fullname, amount, date, type, proofUrl) {
             document.getElementById("modalFullname").textContent = fullname;
             document.getElementById("modalAmount").textContent = parseFloat(amount).toFixed(2);
             document.getElementById("modalDate").textContent = date;
             document.getElementById("modalType").textContent = type;
 
             let proofImg = document.getElementById("modalProof");
+            let noProofMsg = document.getElementById("noProofMessage");
 
-            if (proofFilename && proofFilename !== "null") {
-                let basePath = "";
-
-                if (type === "Donation") {
-                    basePath = "{{ asset('assets/transactions') }}";
-                } else if (type === "Payment") {
-                    basePath = "{{ asset('assets/payment') }}";
-                } else {
-                    basePath = "{{ asset('assets/others') }}";
-                }
-
-                proofImg.src = basePath + "/" + proofFilename;
+            // Check if proofUrl exists and is a valid URL (starts with http)
+            if (proofUrl && proofUrl !== "null" && proofUrl !== "" && proofUrl.startsWith("http")) {
+                proofImg.src = proofUrl;
                 proofImg.classList.remove("hidden");
+                noProofMsg.classList.add("hidden");
             } else {
                 proofImg.classList.add("hidden");
+                noProofMsg.classList.remove("hidden");
             }
 
             document.getElementById("transactionModal").classList.remove("hidden");

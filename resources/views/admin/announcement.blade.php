@@ -21,7 +21,7 @@
 
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Announcements List</h3>
-                        <button class="btn btn-primary" onclick="document.getElementById('addModal').showModal()">
+                        <button class="btn bg-blue-600 text-white hover:bg-blue-700 border-0" onclick="document.getElementById('addModal').showModal()">
                             Add Announcement
                         </button>
                     </div>
@@ -61,7 +61,7 @@
                                             {{ $announcement->priest->middle_name }}
                                             {{ $announcement->priest->last_name }}</td>
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            {{ $announcement->created_at->format('M d, Y h:i A') }}
+                                            {{ \Carbon\Carbon::parse($announcement->created_at)->format('M d, Y h:i A') }}
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <button class="btn bg-green-700 hover:bg-green-800 text-white"
@@ -121,29 +121,29 @@
 
                                     <!-- Edit Modal -->
                                     <dialog id="editModal{{ $announcement->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg max-w-2xl">
-                                            <h3 class="text-lg font-bold mb-4">Edit Announcement</h3>
+                                        <div class="modal-box rounded-lg shadow-lg max-w-2xl bg-white">
+                                            <h3 class="text-lg font-bold mb-4 text-black">Edit Announcement</h3>
                                             <hr class="my-4">
                                             <form action="{{ route('announcement.update', $announcement->id) }}"
                                                 method="POST" enctype="multipart/form-data" id="editForm">
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Title</label>
+                                                    <label class="block text-black font-medium">Title</label>
                                                     <input type="text" name="title" placeholder="Enter title"
                                                         value="{{ $announcement->title }}"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out">
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black">
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Content</label>
+                                                    <label class="block text-black font-medium">Content</label>
                                                     <textarea type="text" name="content" placeholder="Enter content"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out">{{ $announcement->content }}</textarea>
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black">{{ $announcement->content }}</textarea>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Assigned
+                                                    <label class="block text-black font-medium">Assigned
                                                         Priest</label>
                                                     <select name="assigned_priest"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out text-left"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out text-left bg-white text-black"
                                                         required>
                                                         <option value="">Select a Priest</option>
                                                         @foreach ($priests as $priest)
@@ -156,12 +156,12 @@
                                                     </select>
                                                 </div>
                                                 <hr class="my-4">
-                                                <div class="flex justify-end">
-                                                    <button class="btn text-black hover:bg-red-700 hover:text-white"
+                                                <div class="flex justify-end gap-2">
+                                                    <button class="btn bg-white text-black border border-gray-300 hover:bg-gray-100"
                                                         type="button"
                                                         onclick="editModal{{ $announcement->id }}.close()">Close</button>
                                                     <button type="submit"
-                                                        class="btn bg-blue-700 hover:bg-blue-800 text-white">Update</button>
+                                                        class="btn bg-blue-700 hover:bg-blue-800 text-white border-0">Update</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -195,27 +195,27 @@
 
             <!-- Add Modal -->
             <dialog id="addModal" class="modal">
-                <div class="modal-box rounded-lg shadow-lg max-w-2xl">
-                    <h3 class="text-lg font-bold mb-4">Add Announcement</h3>
+                <div class="modal-box rounded-lg shadow-lg max-w-2xl bg-white">
+                    <h3 class="text-lg font-bold mb-4 text-black">Add Announcement</h3>
                     <hr class="my-4">
                     <form action="{{ route('announcement.store') }}" method="POST">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-medium">Title</label>
+                            <label class="block text-black font-medium">Title</label>
                             <input type="text" name="title" placeholder="Enter title"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black"
                                 required>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-medium">Content</label>
+                            <label class="block text-black font-medium">Content</label>
                             <textarea type="text" name="content" placeholder="Enter content"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black"
                                 required></textarea>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-medium">Assigned Priest</label>
+                            <label class="block text-black font-medium">Assigned Priest</label>
                             <select name="assigned_priest"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black"
                                 required>
                                 <option value="">Select a Priest</option>
                                 @foreach ($priests as $priest)
@@ -225,10 +225,10 @@
                             </select>
                         </div>
                         <hr class="my-4">
-                        <div class="flex justify-end">
-                            <button class="btn text-black hover:bg-red-700 hover:text-white" type="button"
+                        <div class="flex justify-end gap-2">
+                            <button class="btn bg-white text-black border border-gray-300 hover:bg-gray-100" type="button"
                                 onclick="addModal.close()">Close</button>
-                            <button class="btn bg-blue-700 hover:bg-blue-800 text-white" type="submit">Save</button>
+                            <button class="btn bg-blue-700 hover:bg-blue-800 text-white border-0" type="submit">Save</button>
                         </div>
                     </form>
                 </div>

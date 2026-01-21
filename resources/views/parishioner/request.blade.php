@@ -149,138 +149,6 @@
 </dialog>
 
 
-                                <!-- Payment Modal -->
-                                <dialog id="paymentModal{{ $request->id }}" class="modal">
-                                    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl relative bg-white">
-                                        <!-- Modal Header -->
-                                        <button
-    class="btn bg-gray-200 hover:bg-gray-300 text-black me-2 border-0"
-    type="button"
-    onclick="event.preventDefault(); this.closest('dialog').close();">
-    <i class="bx bx-left-arrow-alt"></i>
-</button>
-
-                                        <div class="flex flex-col gap-2">
-                                            <h2 class="text-lg font-bold text-black">Requested Document Payment Summary</h2>
-                                            <p class="text-md">Scan the QRCode below to pay the bill.</p>
-                                        </div>
-
-                                        <hr class="my-4">
-
-                                        <!-- Payment Form -->
-                                        <form action="{{ route('payment.update', $request->id) }}" method="POST" enctype="multipart/form-data">
-
-                                            @csrf
-                                            @method('PUT')
-
-                                            <div class="flex gap-6 items-start">
-                                                <!-- Dynamic QR Codes -->
-                                                <div class="w-1/2">
-                                                    @if ($request->document_type == 'Baptismal Certificate')
-                                                    <img
-                                                        src="{{ asset('assets/img/baptismal_certificate.jpg') }}"
-                                                        alt="Baptismal Certificate"
-                                                        class="w-full h-auto">
-                                                    @elseif ($request->document_type == 'Marriage Certificate')
-                                                    <img
-                                                        src="{{ asset('assets/img/marriage_certificate.jpg') }}"
-                                                        alt="Marriage Certificate"
-                                                        class="w-full h-auto">
-                                                    @elseif ($request->document_type == 'Death Certificate')
-                                                    <img
-                                                        src="{{ asset('assets/img/death_certificate.jpg') }}"
-                                                        alt="Death Certificate"
-                                                        class="w-full h-auto">
-                                                    @elseif ($request->document_type == 'Confirmation Certificate')
-                                                    <img
-                                                        src="{{ asset('assets/img/confirmation_certificate.jpg') }}"
-                                                        alt="Confirmation Certificate"
-                                                        class="w-full h-auto">
-                                                    @else
-                                                    <img
-                                                        src="{{ asset('assets/img/gcash-popup.png') }}"
-                                                        alt="Default GCash QR Code"
-                                                        class="w-full h-auto">
-                                                    @endif
-                                                </div>
-
-                                                <!-- Payment Summary and Transaction ID -->
-                                                <div class="w-2/3 space-y-4">
-                                                    <!-- Payment Summary -->
-                                                    <div>
-                                                        <dl class="flex items-center justify-between gap-4">
-                                                            <dt class="text-gray-500 dark:text-gray-400">
-                                                                {{ $request->document_type }}
-                                                            </dt>
-                                                            <dd class="text-base font-medium text-gray-900 dark:text-white">
-                                                                ₱ {{ $request->certificate_type->amount ?? '' }}
-                                                            </dd>
-
-                                                        </dl>
-                                                    </div>
-
-                                                    <!-- Transaction ID and Number of Copies -->
-                                                    <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                                                        <input
-                                                            type="text"
-                                                            id="number-copies"
-                                                            name="number_copies"
-                                                            placeholder="Number of Copies"
-                                                            required
-                                                            class="input input-bordered w-full"
-                                                            oninput="updateTotal()">
-
-                                                            <label class="input input-bordered flex items-center gap-2 text-gray-400">
-                                                                Transaction ID:
-                                                                    <input
-                                                                    type="file" 
-                                                                    name="transaction_id" 
-                                                                    placeholder="Transaction ID"
-                                                                    id="transaction_id"
-                                                                    accept="image/*"
-                                                                    class="grow border-none focus:ring-0 focus:border-none"
-                                                                    value="{{ $request->payment->transaction_id ?? '' }}"
-                                                                    required
-                                                                    />
-                                                            </label>
-                                                        <input
-                                                            type="text"
-                                                            name="to_pay"
-                                                            placeholder="Paid Amount"
-                                                            id="to_pay"
-                                                            oninput="validatePayment()"
-                                                            class="input input-bordered w-full"
-                                                            required>
-                                                    </div>
-                                                    <div class="text-base font-medium text-black" style="color: black !important;">
-                                                        Total: ₱ <span id="total-amount">0</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <hr class="my-4">
-
-                                            <!-- Modal Actions -->
-                                            <div class="flex justify-end gap-2">
-                                                <button
-    class="btn bg-gray-200 hover:bg-gray-300 text-black border-0"
-    type="button"
-    onclick="event.preventDefault(); this.closest('dialog').close();">
-    Close
-</button>
-
-                                                <button
-                                                    name="submit"
-                                                    id="complete-payment-button"
-                                                    class="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
-                                                    type="submit"
-                                                    disabled>
-                                                    Complete Payment
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </dialog>
 <dialog id="editModal{{ $request->id }}" class="modal">
     <div class="modal-box bg-white" style="background-color: white !important;">
         <h3 class="font-bold text-lg mb-4 text-black" style="color: black !important;">Edit Request</h3>
@@ -295,8 +163,7 @@
                     <select name="document_type"
     id="document_type_{{ $request->id }}"
     class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black"
-    style="background-color: white !important; color: black !important;"
-    required>
+    style="background-color: white !important; color: black !important;">
     <option value="" style="color: black;">Select Document Type</option>
     <option value="Baptismal Certificate" style="color: black;">Baptismal Certificate</option>
     <option value="Marriage Certificate" style="color: black;">Marriage Certificate</option>
@@ -309,19 +176,32 @@
                 <div id="baptism_{{ $request->id }}" class="hidden">
                     <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Baptismal Certificate Details</h2>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Name of Child: </label>
-                            <input type="text" name="name_of_child" placeholder="Name of Child"
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">First Name of Child: </label>
+                            <input type="text" name="first_name_child" placeholder="First Name of Child"
                                 class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
                                 style="background-color: white !important; color: black !important;">
                         </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">Middle Name of Child: </label>
+                            <input type="text" name="middle_name_child" placeholder="Middle Name of Child"
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                                style="background-color: white !important; color: black !important;">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">Last Name of Child: </label>
+                            <input type="text" name="last_name_child" placeholder="Last Name of Child"
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                                style="background-color: white !important; color: black !important;">
+                        </div>
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Date of Birth: </label>
                             <input type="date" name="date_of_birth" placeholder="Date of Birth"
                                 class="input input-bordered w-full bg-white text-black border-gray-300"
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
-                    </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Place of Birth: </label>
@@ -367,19 +247,32 @@
                     <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Marriage Certificate Details</h2>
                     <h3 class="text-md font-bold mb-4 text-black" style="color: black !important;">Bride Information</h3>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Bride Name: </label>
-                            <input type="text" name="bride_name" placeholder="Bride Name"
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">First Name of Bride: </label>
+                            <input type="text" name="bride_first_name" placeholder="First Name of Bride"
                                 class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
                                 style="background-color: white !important; color: black !important;">
                         </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">Middle Name of Bride: </label>
+                            <input type="text" name="bride_middle_name" placeholder="Middle Name of Bride"
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                                style="background-color: white !important; color: black !important;">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-black font-medium" style="color: black !important;">Last Name of Bride: </label>
+                            <input type="text" name="bride_last_name" placeholder="Last Name of Bride"
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                                style="background-color: white !important; color: black !important;">
+                        </div>
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Birthdate of Bride: </label>
                             <input type="date" id="birthdate_bride" name="birthdate_bride"
                                 placeholder="Birthdate of Bride" class="input input-bordered w-full bg-white text-black border-gray-300"
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
-                    </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Bride: </label>
@@ -430,17 +323,28 @@
                     </div>
                     <h3 class="text-md font-bold mb-4">Groom Information</h3>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Name of Groom: </label>
-                            <input type="text" name="name_of_groom" placeholder="Name of Groom"
+                        <div class="sm:col-span-2">
+                            <label class="block text-gray-700 font-medium">First Name of Groom: </label>
+                            <input type="text" name="groom_first_name" placeholder="First Name of Groom"
                                 class="input input-bordered w-full">
                         </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-gray-700 font-medium">Middle Name of Groom: </label>
+                            <input type="text" name="groom_middle_name" placeholder="Middle Name of Groom"
+                                class="input input-bordered w-full">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-gray-700 font-medium">Last Name of Groom: </label>
+                            <input type="text" name="groom_last_name" placeholder="Last Name of Groom"
+                                class="input input-bordered w-full">
+                        </div>
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthdate of Groom: </label>
                             <input type="date" id="birthdate_groom" name="birthdate_groom"
                                 placeholder="Birthdate of Groom" class="input input-bordered w-full">
                         </div>
-                    </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Groom: </label>
@@ -501,7 +405,7 @@
                 </div>
 
                 <div id="death_{{ $request->id }}" class="hidden">
-    <h2 class="text-lg font-bold mb-4">Death Certificate Details</h2>
+    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Death Certificate Details</h2>
     <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
 
         <!-- First Name -->
@@ -540,7 +444,7 @@
         <!-- File Upload -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Death Certificate (Hospital Record):</label>
-            <input type="file" name="file_death" class="input input-bordered w-full">
+            <input type="file" name="file_death" class="input input-bordered w-full flex items-center py-2">
             <p class="text-gray-500 text-sm italic mt-1">
                 Note: Please attach the death certificate of the deceased.
             </p>
@@ -562,28 +466,45 @@
 
 
                 <div id="confirmation_{{ $request->id }}" class="hidden">
-                    <h2 class="text-lg font-bold mb-4">Confirmation Certificate Details</h2>
+                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Confirmation Certificate Details</h2>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
+                        <div class="sm:col-span-2">
                             <label class="block text-gray-700 font-medium">First Name: </label>
                             <input type="text" name="confirmation_first_name" placeholder="First Name"
                                 class="input input-bordered w-full">
                         </div>
-                        <div class="sm:col-span-3">
+                        <div class="sm:col-span-2">
                             <label class="block text-gray-700 font-medium">Middle Name: </label>
                             <input type="text" name="confirmation_middle_name" placeholder="Middle Name"
+                                class="input input-bordered w-full">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-gray-700 font-medium">Last Name: </label>
+                            <input type="text" name="confirmation_last_name" placeholder="Last Name"
                                 class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Last Name: </label>
-                            <input type="text" name="confirmation_last_name" placeholder="Last Name"
+                            <label class="block text-gray-700 font-medium">Place of Birth: </label>
+                            <input type="text" name="confirmation_place_of_birth" placeholder="Place of Birth"
                                 class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Birth: </label>
-                            <input type="date" name="confirmation_date_of_birth" placeholder="Date of Birth"
+                            <label class="block text-gray-700 font-medium">Date of Baptism: </label>
+                            <input type="date" name="confirmation_date_of_baptism" placeholder="Date of Baptism"
+                                class="input input-bordered w-full">
+                        </div>
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Fathers Name: </label>
+                            <input type="text" name="confirmation_fathers_name" placeholder="Fathers Name"
+                                class="input input-bordered w-full">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Mothers Name: </label>
+                            <input type="text" name="confirmation_mothers_name" placeholder="Mothers Name"
                                 class="input input-bordered w-full">
                         </div>
                     </div>
@@ -594,9 +515,9 @@
                                 placeholder="Date of Confirmation" class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Upload Confirmation Document: </label>
-                            <input type="file" name="file_confirmation"
-                                class="file-input file-input-bordered w-full" accept="image/*,.pdf">
+                            <label class="block text-gray-700 font-medium">Confirmation Sponsors Name: </label>
+                            <input type="text" name="confirmation_sponsors_name" placeholder="Confirmation Sponsors Name"
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -626,18 +547,16 @@
 </button>
 
 
-    <!-- SUBMIT REQUEST BUTTON -->
-    <form method="POST" action="{{ route('request.store') }}">
-        @csrf
-        <button id="submitRequestBtn"
-            type="submit"
-            class="btn bg-blue-700 hover:bg-blue-800 text-white">
-            Submit Request
-        </button>
-    </form>
+    <!-- UPDATE REQUEST BUTTON -->
+    <button id="updateRequestBtn"
+        type="submit"
+        class="btn bg-blue-700 hover:bg-blue-800 text-white">
+        Update Request
+    </button>
 
 </div>
 
+        </form>
     </dialog>
 <dialog id="deleteModal{{ $request->id }}" class="modal">
     <div class="modal-box bg-white" style="background-color: white !important;">
@@ -766,22 +685,28 @@
                                                                 {{ $request->document_type }}
                                                             </dt>
                                                             <dd class="text-base font-medium text-gray-900 dark:text-white">
-                                                                ₱ {{ $request->certificate_type->amount ?? '' }}
+                                                                @php
+                                                                    $amount = $certificate_types->get($request->document_type, 100);
+                                                                @endphp
+                                                                ₱ {{ number_format($amount, 2) }}
                                                             </dd>
 
                                                         </dl>
                                                     </div>
 
+                                                    <!-- Hidden input to store the certificate price -->
+                                                    <input type="hidden" id="certificate-price-{{ $request->id }}" value="{{ $amount }}">
+
                                                     <!-- Transaction ID and Number of Copies -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
                                                         <input
                                                             type="text"
-                                                            id="number-copies"
+                                                            id="number-copies-{{ $request->id }}"
                                                             name="number_copies"
                                                             placeholder="Number of Copies"
                                                             required
                                                             class="input input-bordered w-full"
-                                                            oninput="updateTotal()">
+                                                            oninput="updateTotal{{ $request->id }}()">
 
                                                             <label class="input input-bordered flex items-center gap-2 text-gray-400">
                                                                 Transaction ID:
@@ -789,24 +714,24 @@
                                                                     type="file" 
                                                                     name="transaction_id" 
                                                                     placeholder="Transaction ID"
-                                                                    id="transaction_id"
+                                                                    id="transaction_id-{{ $request->id }}"
                                                                     accept="image/*"
                                                                     class="grow border-none focus:ring-0 focus:border-none"
                                                                     value="{{ $request->payment->transaction_id ?? '' }}"
                                                                     required
+                                                                    onchange="validatePayment{{ $request->id }}()"
                                                                     />
                                                             </label>
                                                         <input
                                                             type="text"
                                                             name="to_pay"
                                                             placeholder="Paid Amount"
-                                                            id="to_pay"
-                                                            oninput="validatePayment()"
-                                                            class="input input-bordered w-full"
-                                                            required>
+                                                            id="to_pay-{{ $request->id }}"
+                                                            oninput="validatePayment{{ $request->id }}()"
+                                                            class="input input-bordered w-full">
                                                     </div>
                                                     <div class="text-base font-medium text-black" style="color: black !important;">
-                                                        Total: ₱ <span id="total-amount">0</span>
+                                                        Total: ₱ <span id="total-amount-{{ $request->id }}">0</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -824,7 +749,7 @@
 
                                                 <button
                                                     name="submit"
-                                                    id="complete-payment-button"
+                                                    id="complete-payment-button-{{ $request->id }}"
                                                     class="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
                                                     type="submit"
                                                     disabled>
@@ -834,6 +759,32 @@
                                         </form>
                                     </div>
                                 </dialog>
+
+                                <script>
+                                    function updateTotal{{ $request->id }}() {
+                                        const inputElement = document.getElementById('number-copies-{{ $request->id }}');
+                                        inputElement.value = inputElement.value.replace(/[^0-9]/g, '');
+                                        const numberOfCopies = parseInt(inputElement.value) || 0;
+                                        const certificatePrice = parseFloat(document.getElementById('certificate-price-{{ $request->id }}').value) || 0;
+                                        const totalAmount = certificatePrice * numberOfCopies;
+                                        document.getElementById('total-amount-{{ $request->id }}').textContent = totalAmount.toFixed(2);
+                                        validatePayment{{ $request->id }}();
+                                    }
+
+                                    function validatePayment{{ $request->id }}() {
+                                        const totalAmount = parseFloat(document.getElementById('total-amount-{{ $request->id }}').textContent) || 0;
+                                        const paidAmount = parseFloat(document.getElementById('to_pay-{{ $request->id }}').value.replace(/[^0-9]/g, '')) || 0;
+                                        const submitButton = document.getElementById('complete-payment-button-{{ $request->id }}');
+                                        const transactionFile = document.getElementById('transaction_id-{{ $request->id }}');
+
+                                        if (paidAmount === totalAmount && totalAmount > 0 && transactionFile.files.length > 0) {
+                                            submitButton.disabled = false;
+                                        } else {
+                                            submitButton.disabled = true;
+                                        }
+                                    }
+                                </script>
+
                                 <!-- View Modal -->
                                 <dialog id="viewModal{{ $request->id }}" class="modal">
                                     <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl">
@@ -1376,7 +1327,7 @@
                     <label class="block text-black font-medium" style="color: black !important;">Document Type</label>
                     <select name="document_type" id="document_type"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black"
-                        style="background-color: white !important; color: black !important;" required>
+                        style="background-color: white !important; color: black !important;">
                         <option value="" readonly style="color: black;">Select Document Type</option>
                         <option value="Baptismal Certificate" style="color: black;">Baptismal Certificate</option>
                         <option value="Marriage Certificate" style="color: black;">Marriage Certificate</option>
@@ -1391,25 +1342,25 @@
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">First Name of Child: </label>
                             <input type="text" name="first_name_child" placeholder=" First Name of Child"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Middle Name of Child: </label>
                             <input type="text" name="middle_name_child" placeholder=" Middle Name of Child"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Last Name of Child: </label>
                             <input type="text" name="last_name_child" placeholder=" Last Name of Child"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Date of Birth: </label>
                             <input type="date" name="date_of_birth" placeholder="Date of Birth"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300" 
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
                     </div>
@@ -1417,13 +1368,13 @@
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Place of Birth: </label>
                             <input type="text" name="place_of_birth" placeholder="Place of Birth"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Date of Baptism: </label>
                             <input type="date" name="baptism_schedule" placeholder="Date of Baptism"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300" 
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
                     </div>
@@ -1431,13 +1382,13 @@
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Name of Father: </label>
                             <input type="text" name="name_of_father" placeholder="Name of Father"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" required 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-black font-medium" style="color: black !important;">Name of Mother: </label>
                             <input type="text" name="name_of_mother" placeholder="Name of Mother"
-                                class="input input-bordered w-full required bg-white text-black border-gray-300 placeholder-gray-500" 
+                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500" required 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                         <div class="sm:col-span-3">
@@ -1455,147 +1406,147 @@
                 </div>
 
                 <div id="marriage" class="hidden">
-                    <h2 class="text-lg font-bold mb-4">Marriage Certificate Details</h2>
-                    <h3 class="text-md font-bold mb-4">Bride Information</h3>
+                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Marriage Certificate Details</h2>
+                    <h3 class="text-md font-bold mb-4 text-black" style="color: black !important;">Bride Information</h3>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">First Name of Bride: </label>
                             <input type="text" name="bride_first_name" placeholder="First Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Middle Name of Bride: </label>
                             <input type="text" name="bride_middle_name" placeholder="Middle Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Last Name of Bride: </label>
                             <input type="text" name="bride_last_name" placeholder="Last Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthdate of Bride: </label>
                             <input type="date" id="birthdate_bride" name="birthdate_bride"
-                                placeholder="Birthdate of Bride" class="input input-bordered w-full required">
+                                placeholder="Birthdate of Bride" class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Bride: </label>
                             <input type="number" id="age_bride" name="age_bride" placeholder="Age of Bride"
-                                min="18" max="120" class="input input-bordered w-full required">
+                                min="18" max="120" class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthplace of Bride: </label>
                             <input type="text" name="birthplace_bride" placeholder="Birthplace of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Citizenship of Bride: </label>
                             <input type="text" name="citizenship_bride" placeholder="Citizenship of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Religion of Bride: </label>
                             <input type="text" name="religion_bride" placeholder="Religion of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Residence of Bride: </label>
                             <input type="text" name="residence_bride" placeholder="Residence of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Civil Status of Bride: </label>
                             <input type="text" name="civil_status_bride" placeholder="Civil Status of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Name of Father of Bride: </label>
                             <input type="text" name="name_of_father_bride" placeholder="Name of Father of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Name of Mother of Bride: </label>
                             <input type="text" name="name_of_mother_bride" placeholder="Name of Mother of Bride"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
-                    <h3 class="text-md font-bold mb-4">Groom Information</h3>
+                    <h3 class="text-md font-bold mb-4 text-black" style="color: black !important;">Groom Information</h3>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">First Name of Groom: </label>
                             <input type="text" name="groom_first_name" placeholder="First Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Middle Name of Groom: </label>
                             <input type="text" name="groom_middle_name" placeholder="Middle Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Last Name of Groom: </label>
                             <input type="text" name="groom_last_name" placeholder="Last Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthdate of Groom: </label>
                             <input type="date" id="birthdate_groom" name="birthdate_groom"
-                                placeholder="Birthdate of Groom" class="input input-bordered w-full required">
+                                placeholder="Birthdate of Groom" class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Age of Groom: </label>
                             <input type="number" id="age_groom" name="age_groom" placeholder="Age of Groom"
-                                min="18" max="120" class="input input-bordered w-full required">
+                                min="18" max="120" class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Birthplace of Groom: </label>
                             <input type="text" name="birthplace_groom" placeholder="Birthplace of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Citizenship of Groom: </label>
                             <input type="text" name="citizenship_groom" placeholder="Citizenship of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Religion of Groom: </label>
                             <input type="text" name="religion_groom" placeholder="Religion of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Residence of Groom: </label>
                             <input type="text" name="residence_groom" placeholder="Residence of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Civil Status of Groom: </label>
                             <input type="text" name="civil_status_groom" placeholder="Civil Status of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Name of Father of Groom: </label>
                             <input type="text" name="name_of_father_groom" placeholder="Name of Father of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Name of Mother of Groom: </label>
                             <input type="text" name="name_of_mother_groom" placeholder="Name of Mother of Groom"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
     <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
@@ -1610,46 +1561,46 @@
                 </div>
 
                 <div id="death" class="hidden">
-    <h2 class="text-lg font-bold mb-4">Death Certificate Details</h2>
+    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Death Certificate Details</h2>
     <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
 
         <!-- First Name -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">First Name of Deceased:</label>
             <input type="text" name="first_name_death" placeholder="First Name"
-                   class="input input-bordered w-full required">
+                   class="input input-bordered w-full">
         </div>
 
         <!-- Middle Name -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Middle Name of Deceased:</label>
             <input type="text" name="middle_name_death" placeholder="Middle Name"
-                   class="input input-bordered w-full required">
+                   class="input input-bordered w-full">
         </div>
 
         <!-- Last Name -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Last Name of Deceased:</label>
             <input type="text" name="last_name_death" placeholder="Last Name"
-                   class="input input-bordered w-full required">
+                   class="input input-bordered w-full">
         </div>
 
         <!-- Date of Birth -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Date of Birth:</label>
-            <input type="date" name="date_of_birth_death" class="input input-bordered w-full required">
+            <input type="date" name="date_of_birth_death" class="input input-bordered w-full">
         </div>
 
         <!-- Date of Death -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Date of Death:</label>
-            <input type="date" name="date_of_death" class="input input-bordered w-full required">
+            <input type="date" name="date_of_death" class="input input-bordered w-full">
         </div>
 
         <!-- File Upload -->
         <div class="sm:col-span-3">
             <label class="block text-gray-700 font-medium">Death Certificate (Hospital Record):</label>
-            <input type="file" name="file_death" class="input input-bordered w-full ">
+            <input type="file" name="file_death" class="input input-bordered w-full flex items-center py-2">
             <p class="text-gray-500 text-sm italic mt-1">
                 Note: Please attach the death certificate of the deceased.
             </p>
@@ -1671,45 +1622,61 @@
 
 
                 <div id="confirmation" class="hidden">
-                    <h2 class="text-lg font-bold mb-4">Confirmation Certificate Details</h2>
+                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Confirmation Certificate Details</h2>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">First Name: </label>
                             <input type="text" name="confirmation_first_name" placeholder="First Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Middle Name: </label>
                             <input type="text" name="confirmation_middle_name" placeholder="Middle Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Last Name: </label>
                             <input type="text" name="confirmation_last_name" placeholder="Last Name"
-                                class="input input-bordered w-full required">
+                                class="input input-bordered w-full">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Birth: </label>
-                            <input type="date" name="confirmation_date_of_birth" placeholder="Date of Birth"
-                                class="input input-bordered w-full required">
+                            <label class="block text-gray-700 font-medium">Place of Birth: </label>
+                            <input type="text" name="confirmation_place_of_birth" placeholder="Place of Birth"
+                                class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Date of Baptism: </label>
+                            <input type="date" name="confirmation_date_of_baptism" placeholder="Date of Baptism"
+                                class="input input-bordered w-full">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Fathers Name: </label>
+                            <input type="text" name="confirmation_fathers_name" placeholder="Fathers Name"
+                                class="input input-bordered w-full">
+                        </div>
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Mothers Name: </label>
+                            <input type="text" name="confirmation_mothers_name" placeholder="Mothers Name"
+                                class="input input-bordered w-full">
+                        </div>
                         <div class="sm:col-span-3">
                             <label class="block text-gray-700 font-medium">Date of Confirmation: </label>
                             <input type="date" name="confirmation_date_of_confirmation"
-                                placeholder="Date of Confirmation" class="input input-bordered w-full required">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Upload Confirmation Document: </label>
-                            <input type="file" name="file_confirmation"
-                                class="file-input file-input-bordered w-full" accept="image/*,.pdf">
+                                placeholder="Date of Confirmation" class="input input-bordered w-full">
                         </div>
                     </div>
                     <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <!-- Gmail -->
+                        <div class="sm:col-span-3">
+                            <label class="block text-gray-700 font-medium">Confirmation Sponsors Name: </label>
+                            <input type="text" name="confirmation_sponsors_name" placeholder="Confirmation Sponsors Name"
+                                class="input input-bordered w-full">
+                        </div>
                         <div class="sm:col-span-3">
                             <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
                             <input type="email" 
@@ -1742,34 +1709,6 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        const popup = document.getElementById('gcash-popup');
-        const transactionContainer = document.getElementById('transaction-id-container');
-
-        function togglePopup(show) {
-            if (show) {
-                console.log('show');
-                popup.classList.remove('hidden');
-                popup.classList.add('flex');
-                transactionContainer.classList.remove('hidden');
-            } else {
-                popup.classList.add('hidden');
-                popup.classList.remove('flex');
-                transactionContainer.classList.add('hidden');
-            }
-        }
-
-        function closePopup() {
-            popup.classList.add('hidden');
-            popup.classList.remove('flex');
-        }
-
-        function closePayment() {
-
-            popup.classList.add('hidden');
-            popup.classList.remove('flex');
-            transactionContainer.classList.add('hidden');
-        }
-    <script>
 // Show/hide fields based on selected document type
 document.getElementById('document_type').addEventListener('change', function() {
     const value = this.value;
@@ -1779,206 +1718,128 @@ document.getElementById('document_type').addEventListener('change', function() {
         const div = document.getElementById(section);
         if(div) {
             div.classList.add('hidden');
-            // Remove previous required highlights
+            // Remove required attribute from all fields in hidden sections
             const inputs = div.querySelectorAll('input, select');
             inputs.forEach(input => {
+                input.removeAttribute('required');
                 input.style.borderColor = '';
+                // Remove any existing required labels
+                if(input.nextElementSibling && input.nextElementSibling.classList.contains('required-label')) {
+                    input.nextElementSibling.remove();
+                }
             });
         }
     });
 
-    if(value === 'Baptismal Certificate') document.getElementById('baptism').classList.remove('hidden');
-    if(value === 'Marriage Certificate') document.getElementById('marriage').classList.remove('hidden');
-    if(value === 'Death Certificate') document.getElementById('death').classList.remove('hidden');
-    if(value === 'Confirmation Certificate') document.getElementById('confirmation').classList.remove('hidden');
+    // Show selected section and add required to ALL input fields (except file uploads)
+    if(value === 'Baptismal Certificate') {
+        const div = document.getElementById('baptism');
+        div.classList.remove('hidden');
+        div.querySelectorAll('input:not([type="file"])').forEach(input => {
+            input.setAttribute('required', 'required');
+        });
+    }
+    if(value === 'Marriage Certificate') {
+        const div = document.getElementById('marriage');
+        div.classList.remove('hidden');
+        div.querySelectorAll('input:not([type="file"])').forEach(input => {
+            input.setAttribute('required', 'required');
+        });
+    }
+    if(value === 'Death Certificate') {
+        const div = document.getElementById('death');
+        div.classList.remove('hidden');
+        div.querySelectorAll('input').forEach(input => {
+            input.setAttribute('required', 'required');
+        });
+    }
+    if(value === 'Confirmation Certificate') {
+        const div = document.getElementById('confirmation');
+        div.classList.remove('hidden');
+        div.querySelectorAll('input:not([type="file"])').forEach(input => {
+            input.setAttribute('required', 'required');
+        });
+    }
 });
 
-// Form validation on submit
+// Form validation on submit - just highlight missing fields, no alert
 document.getElementById('addRequestForm').addEventListener('submit', function(e) {
-    const docType = document.getElementById('document_type').value;
-    let requiredFields = [];
-
-    // Define required fields based on document type
-    if(docType === 'Baptismal Certificate') {
-        requiredFields = ['name_of_child','date_of_birth','place_of_birth','baptism_schedule','name_of_father','name_of_mother','gmail'];
-    } else if(docType === 'Marriage Certificate') {
-        requiredFields = ['bride_name','birthdate_bride','name_of_groom','birthdate_groom'];
-    } else if(docType === 'Death Certificate') {
-        requiredFields = ['first_name_death','middle_name_death','last_name_death','date_of_birth_death','date_of_death','file_death'];
-    } else if(docType === 'Confirmation Certificate') {
-        requiredFields = ['confirmation_first_name','confirmation_middle_name','confirmation_last_name','confirmation_date_of_birth','confirmation_date_of_confirmation'];
-    }
+    const form = this;
+    const docType = form.querySelector('#document_type').value;
+    
+    // Get the visible section
+    let visibleSection = null;
+    if(docType === 'Baptismal Certificate') visibleSection = document.getElementById('baptism');
+    else if(docType === 'Marriage Certificate') visibleSection = document.getElementById('marriage');
+    else if(docType === 'Death Certificate') visibleSection = document.getElementById('death');
+    else if(docType === 'Confirmation Certificate') visibleSection = document.getElementById('confirmation');
+    
+    if(!visibleSection) return;
 
     let valid = true;
-
-    requiredFields.forEach(name => {
-        const field = document.getElementsByName(name)[0];
-        if(field) {
-            // Check if field is empty
-            if(!field.value) {
-                field.style.borderColor = 'red';
-                // Add Required Label if not exists
-                if(!field.nextElementSibling || !field.nextElementSibling.classList.contains('required-label')) {
-                    const label = document.createElement('span');
-                    label.textContent = 'Required';
-                    label.className = 'required-label text-red-600 text-sm ms-1';
-                    field.parentNode.insertBefore(label, field.nextSibling);
-                }
-                valid = false;
-            } else {
-                field.style.borderColor = '';
-                // Remove existing required label
-                if(field.nextElementSibling && field.nextElementSibling.classList.contains('required-label')) {
-                    field.nextElementSibling.remove();
-                }
+    
+    // Check all required fields in the visible section
+    visibleSection.querySelectorAll('input[required]').forEach(field => {
+        let isEmpty = false;
+        
+        // Special handling for file inputs
+        if(field.type === 'file') {
+            isEmpty = !field.files || field.files.length === 0;
+        } else {
+            isEmpty = !field.value || field.value.trim() === '';
+        }
+        
+        if(isEmpty) {
+            field.style.borderColor = 'red';
+            // Add Required Label if not exists
+            if(!field.nextElementSibling || !field.nextElementSibling.classList.contains('required-label')) {
+                const label = document.createElement('span');
+                label.textContent = 'Required';
+                label.className = 'required-label text-red-600 text-sm ms-1';
+                field.parentNode.insertBefore(label, field.nextSibling);
+            }
+            valid = false;
+        } else {
+            field.style.borderColor = '';
+            // Remove existing required label
+            if(field.nextElementSibling && field.nextElementSibling.classList.contains('required-label')) {
+                field.nextElementSibling.remove();
             }
         }
     });
 
     if(!valid) {
         e.preventDefault();
-        alert('Please complete all required fields.');
+        // Scroll to first error
+        const firstError = visibleSection.querySelector('input[style*="red"]');
+        if(firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 });
 </script>
 
     <script>
-function handleDocumentType(requestId) {
-    const select = document.getElementById(`document_type_${requestId}`);
-
-    const sections = {
-        baptism: document.getElementById(`baptism_${requestId}`),
-        marriage: document.getElementById(`marriage_${requestId}`),
-        death: document.getElementById(`death_${requestId}`),
-        confirmation: document.getElementById(`confirmation_${requestId}`)
-    };
-
-    // Hide all first
-    Object.values(sections).forEach(section => {
-        if (section) section.classList.add('hidden');
-    });
-
-    // Show based on selected value
-    switch (select.value) {
-        case 'Baptismal Certificate':
-            sections.baptism.classList.remove('hidden');
-            break;
-        case 'Marriage Certificate':
-            sections.marriage.classList.remove('hidden');
-            break;
-        case 'Death Certificate':
-            sections.death.classList.remove('hidden');
-            break;
-        case 'Confirmation Certificate':
-            sections.confirmation.classList.remove('hidden');
-            break;
-    }
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('addRequestForm');
-    const docTypeSelect = document.getElementById('document_type');
-    const sections = ['baptism', 'marriage', 'death', 'confirmation'];
-
-    function showSection() {
-        const docType = docTypeSelect.value;
-
-        sections.forEach(section => {
-            const div = document.getElementById(section);
-            if(div) div.classList.add('hidden');
-        });
-
-        switch(docType) {
-            case 'Baptismal Certificate':
-                document.getElementById('baptism').classList.remove('hidden');
-                break;
-            case 'Marriage Certificate':
-                document.getElementById('marriage').classList.remove('hidden');
-                break;
-            case 'Death Certificate':
-                document.getElementById('death').classList.remove('hidden');
-                break;
-            case 'Confirmation Certificate':
-                document.getElementById('confirmation').classList.remove('hidden');
-                break;
-        }
-    }
-
-    docTypeSelect.addEventListener('change', showSection);
-    showSection(); // initialize on load
-
-    form.addEventListener('submit', function(e) {
-        let valid = true;
-
-        // Only check visible inputs
-        const inputs = form.querySelectorAll('input[data-required="true"], select[data-required="true"]');
-        inputs.forEach(input => {
-            if(input.offsetParent !== null) { // visible
-                if(!input.value) {
-                    input.style.borderColor = 'red';
-                    if(!input.nextElementSibling || !input.nextElementSibling.classList.contains('required-label')) {
-                        const label = document.createElement('span');
-                        label.textContent = 'Required';
-                        label.className = 'required-label';
-                        input.parentNode.insertBefore(label, input.nextSibling);
-                    }
-                    valid = false;
-                } else {
-                    input.style.borderColor = '';
-                    if(input.nextElementSibling && input.nextElementSibling.classList.contains('required-label')) {
-                        input.nextElementSibling.remove();
-                    }
-                }
-            }
-        });
-
-        if(!valid) {
-            e.preventDefault();
-            alert('Please complete all required fields.');
-        }
-    });
-});
-</script>
-
-
-
-    <script>
-        $(document).ready(function() {
-            $('#document_type').change(function() {
-                const baptism = $('#baptism');
-                const marriage = $('#marriage');
-                const death = $('#death');
-                const confirmation = $('#confirmation');
-
-                if ($(this).val() === 'Baptismal Certificate') {
-                    baptism.removeClass('hidden');
-                    marriage.addClass('hidden');
-                    death.addClass('hidden');
-                    confirmation.addClass('hidden');
-                    $('input[required]').attr('required', true);
-                } else if ($(this).val() === 'Marriage Certificate') {
-                    marriage.removeClass('hidden');
-                    baptism.addClass('hidden');
-                    death.addClass('hidden');
-                    confirmation.addClass('hidden');
-                    $('input[required]').attr('required', true);
-                } else if ($(this).val() === 'Death Certificate') {
-                    death.removeClass('hidden');
-                    marriage.addClass('hidden');
-                    baptism.addClass('hidden');
-                    confirmation.addClass('hidden');
-                    $('input[required]').removeAttr('required');
-                } else if ($(this).val() === 'Confirmation Certificate') {
-                    confirmation.removeClass('hidden');
-                    marriage.addClass('hidden');
-                    baptism.addClass('hidden');
-                    death.addClass('hidden');
-                    $('input[required]').removeAttr('required');
-                }
+        // Handle edit modal document type changes
+        function handleDocumentType(requestId) {
+            const select = document.getElementById(`document_type_${requestId}`);
+            const sections = ['baptism', 'marriage', 'death', 'confirmation'];
+            
+            sections.forEach(section => {
+                const el = document.getElementById(`${section}_${requestId}`);
+                if(el) el.classList.add('hidden');
             });
 
+            const value = select.value;
+            if(value === 'Baptismal Certificate') document.getElementById(`baptism_${requestId}`).classList.remove('hidden');
+            if(value === 'Marriage Certificate') document.getElementById(`marriage_${requestId}`).classList.remove('hidden');
+            if(value === 'Death Certificate') document.getElementById(`death_${requestId}`).classList.remove('hidden');
+            if(value === 'Confirmation Certificate') document.getElementById(`confirmation_${requestId}`).classList.remove('hidden');
+        }
+
+        // Initialize when DOM loaded
+        $(document).ready(function() {
+            // Age calculator function
             function calculateAge(birthdateInput, ageInput) {
                 var birthdate = new Date($(birthdateInput).val());
                 var today = new Date();
@@ -2004,49 +1865,10 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#birthdate_groom').change(function() {
                 calculateAge('#birthdate_groom', '#age_groom');
             });
-
-            $('select[name="payment_method"]').change(function() {
-                if ($(this).val() === 'GCash') {
-                    $('#GCashQR').show();
-                } else {
-                    $('#GCashQR').hide();
-                }
-            });
-
-            $('select[name="payment_method"]').change(function() {
-                if ($(this).val() === 'Cash') {
-                    $('#WalkInQR').show();
-                    $('label[for="transaction_id"]').hide();
-                    $('input[name="transaction_id"]').hide();
-                } else {
-                    $('#WalkInQR').hide();
-                    $('label[for="transaction_id"]').show();
-                    $('input[name="transaction_id"]').show();
-                }
-            });
         });
-    </script>
-    <script>
-        function updateTotal() {
-            const inputElement = document.getElementById('number-copies');
-            inputElement.value = inputElement.value.replace(/[^0-9]/g, ''); // Enforce numeric input
-            const numberOfCopies = parseInt(inputElement.value) || 0;
-            const totalAmount = 100 * numberOfCopies;
-            document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
-            validatePayment(); // Re-validate button state after total changes
-        }
-
-        function validatePayment() {
-            const totalAmount = parseFloat(document.getElementById('total-amount').textContent) || 0;
-            const paidAmount = parseFloat(document.getElementById('to_pay').value.replace(/[^0-9]/g, '')) || 0;
-            const submitButton = document.getElementById('complete-payment-button');
-
-            if (paidAmount === totalAmount && totalAmount > 0) {
-                submitButton.disabled = false;
-            } else {
-                submitButton.disabled = true;
-            }
-        }
     </script>
 
 </x-app-layout>
+
+
+

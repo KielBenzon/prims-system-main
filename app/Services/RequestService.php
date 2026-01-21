@@ -288,37 +288,20 @@ class RequestService
 
             } elseif ($request->document_type == 'Confirmation Certificate') {
                 Log::info('Processing Confirmation Certificate request');
-                // Combine name fields into full name
-                $confirmandName = trim(($request->confirmation_first_name ?? '') . ' ' . ($request->confirmation_middle_name ?? '') . ' ' . ($request->confirmation_last_name ?? ''));
-                
-                Log::info('Confirmation details', ['confirmand' => $confirmandName]);
-                
-                // Handle file upload for confirmation certificate
-                $fileUrl = null;
-                if ($request->hasFile('file_confirmation')) {
-                    $file = $request->file('file_confirmation');
-                    
-                    // Upload to Supabase
-                    $storageService = new SupabaseStorageService();
-                    $bucket = env('SUPABASE_STORAGE_BUCKET_REQUESTS', 'requests');
-                    $result = $storageService->upload($file, $bucket, 'confirmation_certificates');
-                    
-                    if ($result['success']) {
-                        $fileUrl = $result['url'];
-                        Log::info('Confirmation certificate uploaded to Supabase', ['url' => $fileUrl]);
-                    } else {
-                        Log::error('Failed to upload confirmation certificate: ' . ($result['error'] ?? 'Unknown error'));
-                    }
-                }
                 
                 try {
                     CertificateDetail::create([
                         'request_id' => $createdRequest->id,
                         'certificate_type' => $request->document_type,
-                        'name_of_confirmand' => $confirmandName,
-                        'date_of_birth_confirmand' => $request->confirmation_date_of_birth ?? null,
-                        'date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
-                        'file_confirmation' => $fileUrl,
+                        'confirmation_first_name' => $request->confirmation_first_name ?? null,
+                        'confirmation_middle_name' => $request->confirmation_middle_name ?? null,
+                        'confirmation_last_name' => $request->confirmation_last_name ?? null,
+                        'confirmation_place_of_birth' => $request->confirmation_place_of_birth ?? null,
+                        'confirmation_date_of_baptism' => $request->confirmation_date_of_baptism ?? null,
+                        'confirmation_fathers_name' => $request->confirmation_fathers_name ?? null,
+                        'confirmation_mothers_name' => $request->confirmation_mothers_name ?? null,
+                        'confirmation_date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
+                        'confirmation_sponsors_name' => $request->confirmation_sponsors_name ?? null,
                     ]);
                 } catch (Exception $e) {
                     Log::warning('Failed to create confirmation certificate details: ' . $e->getMessage());
@@ -329,10 +312,15 @@ class RequestService
                         $certificateData = [
                             'request_id' => $createdRequest->id,
                             'certificate_type' => $request->document_type,
-                            'name_of_confirmand' => $confirmandName,
-                            'date_of_birth_confirmand' => $request->confirmation_place_of_birth ?? null,
-                            'date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
-                            'file_confirmation' => null,
+                            'confirmation_first_name' => $request->confirmation_first_name ?? null,
+                            'confirmation_middle_name' => $request->confirmation_middle_name ?? null,
+                            'confirmation_last_name' => $request->confirmation_last_name ?? null,
+                            'confirmation_place_of_birth' => $request->confirmation_place_of_birth ?? null,
+                            'confirmation_date_of_baptism' => $request->confirmation_date_of_baptism ?? null,
+                            'confirmation_fathers_name' => $request->confirmation_fathers_name ?? null,
+                            'confirmation_mothers_name' => $request->confirmation_mothers_name ?? null,
+                            'confirmation_date_of_confirmation' => $request->confirmation_date_of_confirmation ?? null,
+                            'confirmation_sponsors_name' => $request->confirmation_sponsors_name ?? null,
                         ];
                         $supabaseService->insert('tcertificate_details', $certificateData);
                         Log::info('Confirmation certificate details saved via Supabase fallback');
@@ -743,6 +731,13 @@ if ($request->status === 'Approved') {
     try {
         // Try database first
         $requestModel = RequestModel::findOrFail($id);
+        
+        // Get the user name directly from User table using requested_by
+        $userName = 'Unknown';
+        if ($requestModel->requested_by) {
+            $user = User::find($requestModel->requested_by);
+            $userName = $user ? $user->name : 'Unknown';
+        }
 
         $requestModel->update([
             'is_paid' => 'Paid',
@@ -750,6 +745,7 @@ if ($request->status === 'Approved') {
 
         Payment::create([
             'request_id' => $id,
+            'name' => $userName,  // Add user name
             'payment_status' => 'Pending',
             'payment_method' => 'Gcash',
             'amount' => $amount,
@@ -792,6 +788,31 @@ if ($request->status === 'Approved') {
                 throw new \Exception('Failed to update request: ' . $updateResponse->body());
             }
 
+            // Get the request to find the user ID
+            $requestResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                'apikey' => $supabaseKey,
+                'Authorization' => 'Bearer ' . $supabaseKey,
+            ])->get($supabaseUrl . '/rest/v1/trequests?id=eq.' . $id . '&select=requested_by');
+            
+            $userName = 'Unknown';
+            if ($requestResponse->successful() && !empty($requestResponse->json())) {
+                $requestData = $requestResponse->json()[0] ?? null;
+                $requestedBy = $requestData['requested_by'] ?? null;
+                
+                // Now get the user name from tusers table
+                if ($requestedBy) {
+                    $userResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                        'apikey' => $supabaseKey,
+                        'Authorization' => 'Bearer ' . $supabaseKey,
+                    ])->get($supabaseUrl . '/rest/v1/tusers?id=eq.' . $requestedBy . '&select=name');
+                    
+                    if ($userResponse->successful() && !empty($userResponse->json())) {
+                        $userData = $userResponse->json()[0] ?? null;
+                        $userName = $userData['name'] ?? 'Unknown';
+                    }
+                }
+            }
+
             // Create payment record
             $paymentResponse = \Illuminate\Support\Facades\Http::withHeaders([
                 'apikey' => $supabaseKey,
@@ -800,6 +821,7 @@ if ($request->status === 'Approved') {
                 'Prefer' => 'return=representation'
             ])->post($supabaseUrl . '/rest/v1/tpayments', [
                 'request_id' => $id,
+                'name' => $userName,  // Add user name
                 'payment_status' => 'Pending',
                 'payment_method' => 'Gcash',
                 'amount' => $amount,

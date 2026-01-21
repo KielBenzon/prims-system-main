@@ -98,6 +98,7 @@ class TransactionController extends Controller
         $start_date   = $request->input('start_date');
         $end_date     = $request->input('end_date');
         $report_type  = $request->input('report_type', 'all'); // default to 'all'
+        $parishioner_name = $request->input('parishioner_name');
         $report_generated = false;
 
         $transactionsData = collect(); // start empty
@@ -107,40 +108,80 @@ class TransactionController extends Controller
 
             $report_generated = true;
 
-            // Fetch donations
-            $donations = $this->executeWithFallback(function () use ($start_date, $end_date) {
-                return DB::table('tdonations')
-                    ->select('transaction_id', 'donor_name', 'amount', 'donation_date')
-                    ->whereBetween('donation_date', [$start_date, $end_date])
-                    ->get();
-            }, collect([]));
+            // Try Supabase REST API directly
+            $supabaseUrl = env('SUPABASE_URL');
+            $supabaseKey = env('SUPABASE_SERVICE_ROLE_KEY');
 
-            // Fetch payments
-            $payments = $this->executeWithFallback(function () use ($start_date, $end_date) {
-                return DB::table('tpayments')
-                    ->select('transaction_id', 'name', 'amount', 'payment_date')
-                    ->whereBetween('payment_date', [$start_date, $end_date])
-                    ->get();
-            }, collect([]));
+            // Fetch donations via Supabase (build URL with proper date filters)
+            try {
+                $donationsUrl = $supabaseUrl . '/rest/v1/tdonations?' 
+                    . 'donation_date=gte.' . $start_date 
+                    . '&donation_date=lte.' . $end_date 
+                    . '&status=eq.Received';
+                
+                // Add name filter if provided
+                if ($parishioner_name) {
+                    $donationsUrl .= '&donor_name=ilike.*' . urlencode($parishioner_name) . '*';
+                }
+                
+                $donationsUrl .= '&select=transaction_url,donor_name,amount,donation_date,status';
+                
+                $donationsResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                    'apikey' => $supabaseKey,
+                    'Authorization' => 'Bearer ' . $supabaseKey,
+                ])->get($donationsUrl);
+
+                $donations = collect($donationsResponse->json() ?? []);
+            } catch (\Exception $e) {
+                $donations = collect([]);
+            }
+
+            // Fetch payments via Supabase (build URL with proper date filters)
+            try {
+                $paymentsUrl = $supabaseUrl . '/rest/v1/tpayments?' 
+                    . 'payment_date=gte.' . $start_date 
+                    . '&payment_date=lte.' . $end_date 
+                    . '&payment_status=eq.Paid';
+                
+                // Add name filter if provided
+                if ($parishioner_name) {
+                    $paymentsUrl .= '&name=ilike.*' . urlencode($parishioner_name) . '*';
+                }
+                
+                $paymentsUrl .= '&select=transaction_id,name,amount,payment_date,payment_status';
+                
+                $paymentsResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                    'apikey' => $supabaseKey,
+                    'Authorization' => 'Bearer ' . $supabaseKey,
+                ])->get($paymentsUrl);
+
+                $payments = collect($paymentsResponse->json() ?? []);
+            } catch (\Exception $e) {
+                $payments = collect([]);
+            }
 
             // Merge donations
             $transactionsData = $transactionsData->merge($donations->map(function ($d) {
+                // Handle both object and array formats
+                $d = is_array($d) ? (object) $d : $d;
                 return [
-                    'transaction_id' => $d->transaction_id,
-                    'full_name' => $d->donor_name, // exact donor name
-                    'amount' => $d->amount,
-                    'date' => Carbon::parse($d->donation_date),
+                    'transaction_id' => $d->transaction_url ?? $d->transaction_id ?? '',
+                    'full_name' => $d->donor_name ?? '',
+                    'amount' => $d->amount ?? 0,
+                    'date' => Carbon::parse($d->donation_date ?? now()),
                     'transaction_type' => 'Donation',
                 ];
             }));
 
             // Merge payments
             $transactionsData = $transactionsData->merge($payments->map(function ($p) {
+                // Handle both object and array formats
+                $p = is_array($p) ? (object) $p : $p;
                 return [
-                    'transaction_id' => $p->transaction_id,
-                    'full_name' => $p->name, // exact payer name
-                    'amount' => $p->amount,
-                    'date' => Carbon::parse($p->payment_date),
+                    'transaction_id' => $p->transaction_id ?? '',
+                    'full_name' => $p->name ?? '',
+                    'amount' => $p->amount ?? 0,
+                    'date' => Carbon::parse($p->payment_date ?? now()),
                     'transaction_type' => 'Payment',
                 ];
             }));
@@ -164,6 +205,7 @@ class TransactionController extends Controller
             'end_date' => $end_date,
             'report_generated' => $report_generated,
             'report_type' => $report_type,
+            'parishioner_name' => $parishioner_name,
         ]);
     }
 

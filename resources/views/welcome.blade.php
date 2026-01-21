@@ -106,10 +106,6 @@
         <div class="max-w-3xl mx-auto mb-10">
             <!-- White Box for Announcement -->
             <div class="bg-white bg-opacity-90 rounded-lg shadow-lg p-6">
-                @if ($announcement->image)
-                    <img src="{{ asset('storage/' . $announcement->image) }}" alt="Announcement Image" class="rounded-lg shadow mb-4">
-                @endif
-
                 <h3 class="text-2xl font-bold text-[#800000] mb-3">{{ $announcement->title }}</h3>
 
                 @if (strpos($announcement->content, 'Schedule:') !== false)
@@ -124,7 +120,7 @@
                     <p class="text-gray-800 mt-2">{{ $announcement->content }}</p>
                 @endif
 
-                @if ($announcement->assigned_priest)
+                @if ($announcement->assigned_priest && isset($announcement->priest))
                     <hr class="my-3 border-gray-400">
                     <p class="text-md text-gray-700">
                         <strong>Assigned Priest:</strong> REV. FR.
