@@ -85,7 +85,7 @@
 
                                     <!-- Edit Modal -->
                                     <dialog id="editModal{{ $document->id }}" class="modal">
-                        <div class="modal-box rounded-lg shadow-lg bg-white">
+                        <div class="modal-box rounded-lg shadow-lg bg-white w-11/12 max-w-5xl">
                             <h3 class="text-lg font-bold mb-4 text-black">Edit Document</h3>
                             <hr class="my-4">
                             <form action="{{ route('documents.update', $document->id) }}" method="POST" enctype="multipart/form-data" id="editForm">
@@ -96,14 +96,31 @@
                                     <label class="block text-gray-700 font-medium">Full Name</label>
                                     <input type="text" name="full_name" placeholder="Enter donor name" value="{{ $document->full_name }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
                                 </div>
+                                
+                                <!-- Current Document Preview -->
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-medium">File</label>
-                                    <input type="file" name="file" placeholder="Enter note" value="{{ $document->file }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black file:text-black file:bg-gray-100 file:border-0 file:px-4 file:py-2 file:rounded file:mr-4">
+                                    <label class="block text-gray-700 font-medium mb-2">Current Document</label>
+                                    @if(str_contains($document->file, '.pdf'))
+                                        <a href="{{ $document->file }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                            </svg>
+                                            Open PDF Document
+                                        </a>
+                                    @else
+                                        <img src="{{ $document->file }}" alt="Current Document" class="max-w-full h-auto rounded-lg border border-gray-300" style="max-height: 400px;">
+                                    @endif
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 font-medium">Upload New File (Optional)</label>
+                                    <input type="file" name="file" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black file:text-black file:bg-gray-100 file:border-0 file:px-4 file:py-2 file:rounded file:mr-4">
+                                    <p class="text-xs text-gray-500 mt-1">Leave empty to keep current file</p>
                                 </div>
                                 <hr class="my-4">
                                 <div class="flex justify-end gap-2">
                                     <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" type="submit">Update</button>
-                                    <button class="btn bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded" type="button" onclick="editModal{{ $document->id }}.close()">Close</button>
+                                    <button class="btn bg-white text-black border border-black hover:bg-gray-100 px-4 py-2 rounded" type="button" onclick="editModal{{ $document->id }}.close()">Close</button>
                                             </form>
                                         </div>
                                     </dialog>
@@ -126,24 +143,27 @@
 
                                     <!-- View Modal -->
                                     <dialog id="viewModal{{ $document->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl">
-                                            <h3 class="text-lg font-bold mb-4">View Document</h3>
-                                            <p><strong>Full Name:</strong> {{ $document->full_name }}</p>
-                                            <p><strong>Uploaded By:</strong> {{ $document->uploaded_by }}</p>
-                                            <p><strong>Uploaded At:</strong> {{ \Carbon\Carbon::parse($document->created_at)->timezone('Asia/Manila')->format('M d, Y h:i A') }}</p>
-                                            @php
-                                                $documentPath = match($document->document_type) {
-                                                    'Baptismal Certificate' => 'Baptismal Certificate',
-                                                    'Marriage Certificate' => 'Marriage Certificate',
-                                                    'Death Certificate' => 'Death Certificate',
-                                                    'Confirmation Certificate' => 'Confirmation Certificate',
-                                                    default => 'Unknown',
-                                                };
-                                            @endphp
-                                            <img src="{{ asset('assets/documents/' . $documentPath . '/' . $document->file) }}" class="max-w-full max-h-screen mx-auto">
+                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl bg-white">
+                                            <h3 class="text-lg font-bold mb-4 text-black">View Document</h3>
+                                            <div class="mb-4">
+                                                <p class="text-black mb-2"><strong>Document Type:</strong> {{ $document->document_type }}</p>
+                                                <p class="text-black mb-2"><strong>Full Name:</strong> {{ $document->full_name }}</p>
+                                                <p class="text-black mb-2"><strong>Uploaded By:</strong> {{ $document->uploaded_by }}</p>
+                                                <p class="text-black mb-4"><strong>Uploaded At:</strong> {{ \Carbon\Carbon::parse($document->created_at)->timezone('Asia/Manila')->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                            
+                                            <!-- Document Display -->
+                                            <div class="mb-4">
+                                                @if(str_contains($document->file, '.pdf'))
+                                                    <iframe src="{{ $document->file }}" class="w-full rounded-lg border border-gray-300" style="height: 600px;"></iframe>
+                                                @else
+                                                    <img src="{{ $document->file }}" alt="{{ $document->full_name }}" class="max-w-full h-auto mx-auto rounded-lg border border-gray-300" style="max-height: 70vh;">
+                                                @endif
+                                            </div>
+                                            
                                             <hr class="my-4">
                                             <div class="flex justify-end">
-                                                <button class="btn text-black hover:bg-red-700 hover:text-white" type="button" onclick="viewModal{{ $document->id }}.close()">Close</button>
+                                                <button class="btn bg-white text-black border border-black hover:bg-gray-100 px-4 py-2 rounded" type="button" onclick="viewModal{{ $document->id }}.close()">Close</button>
                                             </div>
                                         </div>
                                     </dialog>
@@ -233,6 +253,7 @@
             $(document).ready(function() {
                 const table = $('table').DataTable({
                     "dom": '<"flex justify-between items-center mb-4"lf>t<"flex justify-between items-center mt-4"ip>',
+                    "order": [[4, "desc"]], // Sort by Uploaded At column (index 4) descending
                     "language": {
                         "search": "",
                         "searchPlaceholder": "Search documents...",

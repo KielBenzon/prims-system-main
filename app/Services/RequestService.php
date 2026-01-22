@@ -384,32 +384,81 @@ class RequestService
         $approval->save();
 
         // Update certificate details depending on type
-        $details = CertificateDetail::find($id);
+        $details = CertificateDetail::where('request_id', $id)->first();
         if (!$details) {
             $details = new CertificateDetail();
-            $details->id = $id;
+            $details->request_id = $id;
+            $details->certificate_type = $request->document_type;
         }
 
         switch ($request->document_type) {
             case 'Baptismal Certificate':
-                $details->update($request->only([
-                    'name_of_child', 'date_of_birth', 'place_of_birth',
-                    'baptism_schedule', 'name_of_father', 'name_of_mother'
-                ]));
+                // Combine split name fields
+                $nameOfChild = trim(implode(' ', array_filter([
+                    $request->first_name_child,
+                    $request->middle_name_child,
+                    $request->last_name_child
+                ])));
+                
+                $details->fill([
+                    'name_of_child' => $nameOfChild,
+                    'date_of_birth' => $request->date_of_birth,
+                    'place_of_birth' => $request->place_of_birth,
+                    'baptism_schedule' => $request->baptism_schedule,
+                    'name_of_father' => $request->name_of_father,
+                    'name_of_mother' => $request->name_of_mother
+                ]);
+                $details->save();
                 break;
 
             case 'Marriage Certificate':
-                $details->update($request->only([
-                    'bride_name','age_bride','birthdate_bride','birthplace_bride',
-                    'citizenship_bride','religion_bride','residence_bride','civil_status_bride',
-                    'name_of_father_bride','name_of_mother_bride','name_of_groom',
-                    'age_groom','birthdate_groom','birthplace_groom','citizenship_groom',
-                    'religion_groom','residence_groom','civil_status_groom',
-                    'name_of_father_groom','name_of_mother_groom'
-                ]));
+                // Combine split name fields for bride and groom
+                $brideName = trim(implode(' ', array_filter([
+                    $request->bride_first_name,
+                    $request->bride_middle_name,
+                    $request->bride_last_name
+                ])));
+                
+                $groomName = trim(implode(' ', array_filter([
+                    $request->groom_first_name,
+                    $request->groom_middle_name,
+                    $request->groom_last_name
+                ])));
+                
+                $details->fill([
+                    'bride_name' => $brideName,
+                    'age_bride' => $request->age_bride,
+                    'birthdate_bride' => $request->birthdate_bride,
+                    'birthplace_bride' => $request->birthplace_bride,
+                    'citizenship_bride' => $request->citizenship_bride,
+                    'religion_bride' => $request->religion_bride,
+                    'residence_bride' => $request->residence_bride,
+                    'civil_status_bride' => $request->civil_status_bride,
+                    'name_of_father_bride' => $request->name_of_father_bride,
+                    'name_of_mother_bride' => $request->name_of_mother_bride,
+                    'name_of_groom' => $groomName,
+                    'age_groom' => $request->age_groom,
+                    'birthdate_groom' => $request->birthdate_groom,
+                    'birthplace_groom' => $request->birthplace_groom,
+                    'citizenship_groom' => $request->citizenship_groom,
+                    'religion_groom' => $request->religion_groom,
+                    'residence_groom' => $request->residence_groom,
+                    'civil_status_groom' => $request->civil_status_groom,
+                    'name_of_father_groom' => $request->name_of_father_groom,
+                    'name_of_mother_groom' => $request->name_of_mother_groom
+                ]);
+                $details->save();
                 break;
 
             case 'Death Certificate':
+                $updateData = [
+                    'first_name_death' => $request->first_name_death,
+                    'middle_name_death' => $request->middle_name_death,
+                    'last_name_death' => $request->last_name_death,
+                    'date_of_birth_death' => $request->date_of_birth_death,
+                    'date_of_death' => $request->date_of_death
+                ];
+                
                 if ($request->hasFile('file_death')) {
                     $file = $request->file('file_death');
                     
@@ -424,23 +473,31 @@ class RequestService
                         $result = $storageService->upload($file, $bucket, 'death_certificates');
                         
                         if ($result['success']) {
-                            $details->file_death = $result['url'];
+                            $updateData['file_death'] = $result['url'];
                             Log::info('Death certificate updated in Supabase', ['url' => $result['url']]);
                         } else {
                             Log::error('Failed to update death certificate', ['error' => $result['error']]);
                         }
                     }
                 }
-                $details->update($request->only(['first_name_death','middle_name_death','last_name_death']));
+                
+                $details->fill($updateData);
+                $details->save();
                 break;
 
             case 'Confirmation Certificate':
-                $details->update($request->only([
-                    'confirmation_first_name','confirmation_middle_name','confirmation_last_name',
-                    'confirmation_place_of_birth','confirmation_date_of_baptism',
-                    'confirmation_fathers_name','confirmation_mothers_name',
-                    'confirmation_date_of_confirmation','confirmation_sponsors_name'
-                ]));
+                $details->fill([
+                    'confirmation_first_name' => $request->confirmation_first_name,
+                    'confirmation_middle_name' => $request->confirmation_middle_name,
+                    'confirmation_last_name' => $request->confirmation_last_name,
+                    'confirmation_place_of_birth' => $request->confirmation_place_of_birth,
+                    'confirmation_date_of_baptism' => $request->confirmation_date_of_baptism,
+                    'confirmation_fathers_name' => $request->confirmation_fathers_name,
+                    'confirmation_mothers_name' => $request->confirmation_mothers_name,
+                    'confirmation_date_of_confirmation' => $request->confirmation_date_of_confirmation,
+                    'confirmation_sponsors_name' => $request->confirmation_sponsors_name
+                ]);
+                $details->save();
                 break;
         }
 

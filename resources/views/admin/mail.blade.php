@@ -103,86 +103,93 @@
 
                                     <!-- Edit Modal -->
                                     <dialog id="editModal{{ $mail->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg">
-                                            <h3 class="text-lg font-bold mb-4">Edit Mail</h3>
+                                        <div class="modal-box rounded-lg shadow-lg bg-white" style="background-color: white !important;">
+                                            <h3 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Edit Mail</h3>
                                             <hr class="my-4">
                                             <form action="{{ route('mail.update', $mail->id) }}" method="POST"
                                                 enctype="multipart/form-data" id="editForm">
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Sender</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Sender</label>
                                                     <input type="email" name="sender" placeholder="Enter Sender"
                                                         value="stmichaelthearcanghel@gmail.com"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         readonly>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Title</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Title</label>
                                                     <input type="text" name="title" placeholder="Enter title"
                                                         value="{{ $mail->title }}"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black placeholder-gray-500" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         required>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Recipient</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Recipient</label>
                                                     <input type="email" name="recipient"
                                                         placeholder="Enter recipient email"
                                                         value="{{ $mail->recipient }}"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black placeholder-gray-500" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         required>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Subject</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Subject</label>
                                                     <textarea name="subject" placeholder="Enter subject" rows="5"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black placeholder-gray-500" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         required>{{ $mail->subject }}</textarea>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Priority</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Priority</label>
                                                     <select name="priority"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         required>
-                                                        <option value="">Select priority</option>
-                                                        <option value="Very High"
+                                                        <option value="" style="color: black;">Select priority</option>
+                                                        <option value="Very High" style="color: black;"
                                                             {{ $mail->priority == 'Very High' ? 'selected' : '' }}>Very
                                                             High</option>
-                                                        <option value="High"
+                                                        <option value="High" style="color: black;"
                                                             {{ $mail->priority == 'High' ? 'selected' : '' }}>High
                                                         </option>
-                                                        <option value="Normal"
+                                                        <option value="Normal" style="color: black;"
                                                             {{ $mail->priority == 'Normal' ? 'selected' : '' }}>Normal
                                                         </option>
-                                                        <option value="Low"
+                                                        <option value="Low" style="color: black;"
                                                             {{ $mail->priority == 'Low' ? 'selected' : '' }}>Low
                                                     </select>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Status</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Status</label>
                                                     <select name="status"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black" 
+                                                        style="background-color: white !important; color: black !important;"
                                                         required>
-                                                        <option value="">Select status</option>
-                                                        <option value="Undelivered"
+                                                        <option value="" style="color: black;">Select status</option>
+                                                        <option value="Undelivered" style="color: black;"
                                                             {{ $mail->status == 'Undelivered' ? 'selected' : '' }}>
                                                             Undelivered
                                                         </option>
-                                                        <option value="Delivered"
+                                                        <option value="Delivered" style="color: black;"
                                                             {{ $mail->status == 'Delivered' ? 'selected' : '' }}>
                                                             Delivered
                                                         </option>
                                                     </select>
                                                 </div>
                                                 <div class="mb-4">
-                                                    <label class="block text-gray-700 font-medium">Date</label>
+                                                    <label class="block text-black font-medium" style="color: black !important;">Date</label>
                                                     <input type="date" name="date" value="{{ $mail->date }}"
-                                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out"
+                                                        class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black" 
+                                                        style="background-color: white !important; color: black !important; color-scheme: light;"
                                                         required>
                                                 </div>
                                                 <hr class="my-4">
                                                 <div class="flex justify-end">
                                                     <button
-                                                        class="btn text-black hover:bg-red-700 hover:text-white me-2"
+                                                        class="btn bg-white text-black border border-black hover:bg-gray-100 me-2"
                                                         type="button"
                                                         onclick="editModal{{ $mail->id }}.close()">Close</button>
                                                     <button class="btn bg-blue-700 hover:bg-blue-800 text-white"
@@ -215,82 +222,89 @@
 
                                     <!-- View Modal -->
                                     <dialog id="viewModal{{ $mail->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl">
+                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl bg-white" style="background-color: white !important;">
                                             <div class="flex items-center gap-2">
-                                                <button class="btn text-black hover:bg-red-700 hover:text-white"
+                                                <button class="btn bg-white text-black border border-black hover:bg-gray-100"
                                                     type="button" onclick="viewModal{{ $mail->id }}.close()">
                                                     <i class='bx bx-left-arrow-alt'></i>
                                                 </button>
-                                                <h3 class="text-lg font-semibold">View Mail</h3>
+                                                <h3 class="text-lg font-semibold text-black" style="color: black !important;">View Mail</h3>
                                             </div>
                                             <hr class="my-4">
                                             <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Title
                                                         <input type="text" name="title"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->title }}" readonly />
                                                     </label>
                                                 </div>
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Recipient
                                                         <input type="text" name="recipient"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->recipient }}" readonly />
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Subject
                                                         <input type="text" name="subject"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->subject }}" readonly />
                                                     </label>
                                                 </div>
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Priority
                                                         <input type="text" name="priority"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->priority }}" readonly />
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Status
                                                         <input type="text" name="status"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->status }}" readonly />
                                                     </label>
                                                 </div>
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Date
                                                         <input type="text" name="date"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->date }}" readonly />
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                 <div class="sm:col-span-3">
-                                                    <label class="input input-bordered flex items-center gap-2">
+                                                    <label class="input input-bordered flex items-center gap-2 bg-white text-black" style="background-color: white !important; color: black !important;">
                                                         Message
                                                         <input type="text" name="message"
-                                                            class="grow border-none focus:ring-0 focus:border-none"
+                                                            class="grow border-none focus:ring-0 focus:border-none bg-white text-black"
+                                                            style="background-color: white !important; color: black !important;"
                                                             value="{{ $mail->message }}" readonly />
                                                     </label>
                                                 </div>
                                             </div>
                                             <hr class="my-4">
                                             <div class="flex justify-end">
-                                                <button class="btn text-black hover:bg-red-700 hover:text-white"
+                                                <button class="btn bg-white text-black border border-black hover:bg-gray-100"
                                                     type="button"
                                                     onclick="viewModal{{ $mail->id }}.close()">Close</button>
                                             </div>
@@ -363,7 +377,7 @@
 
             <hr class="my-4">
             <div class="flex justify-end">
-                <button type="button" class="btn text-black hover:bg-red-700 hover:text-white me-2" onclick="addModal.close()">Close</button>
+                <button type="button" class="btn bg-white text-black border border-black hover:bg-gray-100 me-2" onclick="addModal.close()">Close</button>
                 <button type="submit" class="btn bg-blue-700 hover:bg-blue-800 text-white">Send</button>
             </div>
         </form>

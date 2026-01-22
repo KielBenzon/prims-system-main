@@ -37,7 +37,7 @@ class Request extends Model
 
     public function certificate_detail()
     {
-        return $this->hasOne(CertificateDetail::class, 'certificate_type', 'document_type');
+        return $this->hasOne(CertificateDetail::class, 'request_id', 'id');
     }
 
     public function certificate_type()

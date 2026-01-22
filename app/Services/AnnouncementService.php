@@ -8,6 +8,8 @@ use App\Models\Announcement;
 use App\Models\Notification;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class AnnouncementService
 {
@@ -128,9 +130,20 @@ class AnnouncementService
             $announcement = Announcement::find($id);
             $announcement->update($request->all());
 
-            Notification::where('type', 'Announcement')->update([
-                'message' => 'An announcement has been updated by ' . Auth::user()->name,
-            ]);
+            // Create a new notification instead of updating existing ones
+            try {
+                Notification::create([
+                    'type' => 'Announcement',
+                    'message' => 'An announcement has been updated by ' . Auth::user()->name,
+                    'is_read' => false,
+                ]);
+            } catch (\Exception $notifError) {
+                // Log notification error but don't fail the entire update
+                \Log::warning('Failed to create notification for announcement update: ' . $notifError->getMessage());
+            }
+
+            // Clear announcement cache
+            \Cache::flush();
 
             session()->flash('success', 'Announcement updated successfully');
             return [

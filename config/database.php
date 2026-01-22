@@ -84,23 +84,15 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'postgres'),
-            'username' => env('DB_USERNAME', 'postgres'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'host' => env('DB_HOST'),
+            'port' => env('DB_PORT'),
+            'database' => env('DB_DATABASE'),
+            'username' => env('DB_USERNAME'),
+            'password' => env('DB_PASSWORD'),
+            'charset' => 'utf8',
             'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'require'),
-            'options' => [
-                \PDO::ATTR_EMULATE_PREPARES => false,
-                \PDO::ATTR_STRINGIFY_FETCHES => false,
-                \PDO::ATTR_TIMEOUT => 30,
-                \PDO::ATTR_PERSISTENT => false,
-            ],
+            'schema' => 'public',
+            'sslmode' => 'require',
         ],
 
         'sqlsrv' => [

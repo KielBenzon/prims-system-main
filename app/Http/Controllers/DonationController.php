@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\useValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 
 
@@ -27,88 +28,77 @@ class DonationController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
-        $filter = $request->query('filter'); // Check if filter is set
+        $filter = $request->query('filter');
 
-        try {
-            $donations = Donation::query()
-                ->when($filter === 'monthly', function ($query) {
-                    $query->whereBetween('donation_date', [now()->startOfMonth(), now()->endOfMonth()]);
-                })
-                ->when($search, function ($query, $search) {
-                    return $query->where('donor_name', 'like', '%' . $search . '%')
-                                 ->orWhere('amount', 'like', '%' . $search . '%')
-                                 ->orWhere('donation_date', 'like', '%' . $search . '%');
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-        } catch (\Exception $e) {
-            Log::warning('Admin donation query failed, using Supabase fallback', ['error' => $e->getMessage()]);
-            
-            // Supabase fallback
+        // Cache key
+        $cacheKey = "donations_search_{$search}_filter_{$filter}";
+        
+        // Cache for 30 seconds
+        $donations = Cache::remember($cacheKey, 30, function () use ($search, $filter) {
             try {
-                $supabaseUrl = env('SUPABASE_URL');
-                $supabaseKey = env('SUPABASE_ANON_KEY');
-                
-                // Get all donations from Supabase
-                $url = $supabaseUrl . '/rest/v1/tdonations?select=*&order=created_at.desc';
-                
-                $response = \Illuminate\Support\Facades\Http::withHeaders([
-                    'apikey' => $supabaseKey,
-                    'Authorization' => 'Bearer ' . $supabaseKey,
-                ])->get($url);
-                
-                if ($response->successful()) {
-                    $data = collect($response->json())->map(function($item) {
-                        $donation = (object) $item;
-                        // Add default values for fields that don't exist in Supabase
-                        $donation->status = $donation->status ?? 'Pending';
-                        // Map transaction_url to transaction_id for blade compatibility
-                        $donation->transaction_id = $donation->transaction_url ?? $donation->transaction_id ?? null;
-                        $donation->note = $donation->note ?? null;
-                        return $donation;
-                    });
+                return Donation::query()
+                    ->when($filter === 'monthly', function ($query) {
+                        $query->whereBetween('donation_date', [now()->startOfMonth(), now()->endOfMonth()]);
+                    })
+                    ->when($search, function ($query, $search) {
+                        return $query->where('donor_name', 'like', '%' . $search . '%')
+                                     ->orWhere('amount', 'like', '%' . $search . '%')
+                                     ->orWhere('donation_date', 'like', '%' . $search . '%');
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+            } catch (\Exception $e) {
+                // Database failed - use optimized Supabase query
+                try {
+                    $supabaseUrl = env('SUPABASE_URL');
+                    $supabaseKey = env('SUPABASE_ANON_KEY');
                     
-                    // Apply filter for monthly if needed
+                    // Build filtered URL for better performance
+                    $url = $supabaseUrl . '/rest/v1/tdonations?select=*&order=created_at.desc';
+                    
+                    // Apply filters at API level (faster than PHP filtering)
                     if ($filter === 'monthly') {
-                        $data = $data->filter(function($donation) {
-                            if (isset($donation->donation_date)) {
-                                $donationDate = \Carbon\Carbon::parse($donation->donation_date);
-                                return $donationDate->month == now()->month && 
-                                       $donationDate->year == now()->year;
-                            }
-                            return false;
-                        });
+                        $startOfMonth = now()->startOfMonth()->toDateString();
+                        $endOfMonth = now()->endOfMonth()->toDateString();
+                        $url .= '&donation_date=gte.' . $startOfMonth . '&donation_date=lte.' . $endOfMonth;
                     }
                     
-                    // Apply search filter if provided
                     if ($search) {
-                        $data = $data->filter(function($donation) use ($search) {
-                            return stripos($donation->donor_name ?? '', $search) !== false ||
-                                   stripos((string)($donation->amount ?? ''), $search) !== false ||
-                                   stripos($donation->donation_date ?? '', $search) !== false;
-                        });
+                        $url .= '&or=(donor_name.ilike.*' . urlencode($search) . '*,amount.eq.' . $search . ',donation_date.ilike.*' . urlencode($search) . '*)';
                     }
                     
-                    // Manual pagination
-                    $page = request()->get('page', 1);
-                    $perPage = 10;
-                    $donations = new \Illuminate\Pagination\LengthAwarePaginator(
-                        $data->forPage($page, $perPage),
-                        $data->count(),
-                        $perPage,
-                        $page,
-                        ['path' => request()->url()]
-                    );
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'apikey' => $supabaseKey,
+                        'Authorization' => 'Bearer ' . $supabaseKey,
+                    ])->get($url);
                     
-                    Log::info('Admin donations loaded from Supabase successfully', ['count' => $data->count()]);
-                } else {
-                    throw new \Exception('Supabase API failed');
+                    if ($response->successful()) {
+                        $data = collect($response->json())->map(function($item) {
+                            $donation = (object) $item;
+                            $donation->status = $donation->status ?? 'Pending';
+                            $donation->transaction_id = $donation->transaction_url ?? $donation->transaction_id ?? null;
+                            $donation->note = $donation->note ?? null;
+                            return $donation;
+                        });
+                        
+                        // Manual pagination
+                        $page = request()->get('page', 1);
+                        $perPage = 10;
+                        return new \Illuminate\Pagination\LengthAwarePaginator(
+                            $data->forPage($page, $perPage),
+                            $data->count(),
+                            $perPage,
+                            $page,
+                            ['path' => request()->url()]
+                        );
+                    } else {
+                        return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
+                    }
+                } catch (\Exception $supabaseError) {
+                    return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
                 }
-            } catch (\Exception $supabaseError) {
-                Log::error('Supabase fallback failed', ['error' => $supabaseError->getMessage()]);
-                $donations = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
             }
-        }
+        });
 
         return view('admin.donation', compact('donations'));
     }

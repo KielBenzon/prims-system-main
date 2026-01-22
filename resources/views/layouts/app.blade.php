@@ -15,6 +15,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Supabase Realtime Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -136,6 +140,73 @@
             setTimeout(() => {
                 $('#error').remove();
             }, 3000);
+        }
+
+        // Initialize Supabase Realtime
+        if (typeof window.supabase === 'undefined') {
+            console.error('Supabase library not loaded');
+        } else {
+            var supabase = window.supabase.createClient(
+                'https://lruvxbhfiogqolwztovs.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydXZ4YmhmaW9ncW9sd3p0b3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NDE5MzcsImV4cCI6MjA4NDQxNzkzN30.K5MnbKEYPLVNbqNKmSua_DjzQ-NwwIRGzYHxSxTc6pE'
+            );
+
+            console.log('Supabase Realtime initialized');
+
+            // Listen to requests
+            supabase.channel('requests').on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'trequests' },
+                function(payload) {
+                    console.log('Request updated:', payload);
+                    if (window.location.pathname.includes('request') || window.location.pathname.includes('approval')) {
+                        location.reload();
+                    }
+                }
+            ).subscribe(function(status) { console.log('Requests channel:', status); });
+
+            // Listen to payments
+            supabase.channel('payments').on('postgres_changes',
+                { event: '*', schema: 'public', table: 'tpayments' },
+                function(payload) {
+                    console.log('Payment updated:', payload);
+                    if (window.location.pathname.includes('payment') || window.location.pathname.includes('request')) {
+                        location.reload();
+                    }
+                }
+            ).subscribe(function(status) { console.log('Payments channel:', status); });
+
+            // Listen to donations
+            supabase.channel('donations').on('postgres_changes',
+                { event: '*', schema: 'public', table: 'tdonations' },
+                function(payload) {
+                    console.log('Donation updated:', payload);
+                    if (window.location.pathname.includes('donation')) {
+                        location.reload();
+                    }
+                }
+            ).subscribe(function(status) { console.log('Donations channel:', status); });
+
+            // Listen to announcements
+            supabase.channel('announcements').on('postgres_changes',
+                { event: '*', schema: 'public', table: 'tannouncements' },
+                function(payload) {
+                    console.log('Announcement updated:', payload);
+                    if (window.location.pathname === '/' || window.location.pathname.includes('announcement')) {
+                        location.reload();
+                    }
+                }
+            ).subscribe(function(status) { console.log('Announcements channel:', status); });
+
+            // Listen to certificate details updates
+            supabase.channel('certificate_details').on('postgres_changes',
+                { event: '*', schema: 'public', table: 'tcertificate_details' },
+                function(payload) {
+                    console.log('Certificate detail updated:', payload);
+                    if (window.location.pathname.includes('request') || window.location.pathname.includes('approval')) {
+                        location.reload();
+                    }
+                }
+            ).subscribe(function(status) { console.log('Certificate details channel:', status); });
         }
     </script>
 </body>
