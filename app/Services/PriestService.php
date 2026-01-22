@@ -128,7 +128,7 @@ class PriestService
                 Notification::create([
                     'type' => 'Priest',
                     'message' => 'A new priest has been added by ' . Auth::user()->name,
-                    'is_read' => 0,
+                    'user_id' => null, // Admin only
                 ]);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to create notification: ' . $e->getMessage());

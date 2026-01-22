@@ -38,12 +38,22 @@ class AnnouncementService
         // Create announcement
         $announcement = Announcement::create($request->all());
 
-        // Create notification
+        // Create notification for admin
         Notification::create([
             'type' => 'Announcement',
             'message' => 'A new announcement has been created by ' . Auth::user()->name,
-            'is_read' => '0',
+            'user_id' => null,
         ]);
+
+        // Create notification for all parishioners
+        $parishioners = \App\Models\User::where('role', 'Parishioner')->get();
+        foreach ($parishioners as $parishioner) {
+            Notification::create([
+                'type' => 'Announcement',
+                'message' => 'New announcement: ' . $announcement->title,
+                'user_id' => $parishioner->id,
+            ]);
+        }
 
         session()->flash('success', 'Announcement created successfully');
         return [
@@ -132,18 +142,29 @@ class AnnouncementService
 
             // Create a new notification instead of updating existing ones
             try {
+                // Notification for admin
                 Notification::create([
                     'type' => 'Announcement',
                     'message' => 'An announcement has been updated by ' . Auth::user()->name,
-                    'is_read' => false,
+                    'user_id' => null,
                 ]);
+
+                // Notification for all parishioners
+                $parishioners = \App\Models\User::where('role', 'Parishioner')->get();
+                foreach ($parishioners as $parishioner) {
+                    Notification::create([
+                        'type' => 'Announcement',
+                        'message' => 'Announcement updated: ' . $announcement->title,
+                        'user_id' => $parishioner->id,
+                    ]);
+                }
             } catch (\Exception $notifError) {
                 // Log notification error but don't fail the entire update
-                \Log::warning('Failed to create notification for announcement update: ' . $notifError->getMessage());
+                Log::warning('Failed to create notification for announcement update: ' . $notifError->getMessage());
             }
 
             // Clear announcement cache
-            \Cache::flush();
+            Cache::flush();
 
             session()->flash('success', 'Announcement updated successfully');
             return [

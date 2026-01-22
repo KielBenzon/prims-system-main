@@ -30,9 +30,13 @@ class NotificationService
         }
 
         try {
+            // Generic notification creation - set user_id based on context
+            // If targeting a specific parishioner, pass user_id in request
+            // If for admin only, leave user_id as null
             Notification::create([
                 'message' => $request->input('message') . ' by ' . Auth::user()->name,
                 'type' => $request->input('type'),
+                'user_id' => $request->input('user_id', null), // Default to admin (null)
             ]);
         } catch (QueryException $e) {
             return [

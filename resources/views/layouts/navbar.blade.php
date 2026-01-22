@@ -68,25 +68,19 @@
 
            
         <div class="dropdown dropdown-end relative">
-            <button class="btn btn-ghost text-xl text-black" tabindex="0" title="Notifications">
+            <label tabindex="0" class="btn btn-ghost text-xl text-black" id="notificationBell" title="Notifications">
                 <i class='bx bxs-bell text-black'></i>
-                                @if ($notifications->count() > 0)
+                @if ($notifications->where('read_at', null)->count() > 0)
                     <span id="notification-dot"
-      class="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>
-
-                @elseif (Auth::user()->role == 'Parishioner' &&
-                        $notifications->whereIn('type', ['request', 'donation', 'announcement'])->count() > 0)
-                    <span id="notification-dot"
-      class="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>
-
+                          class="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>
                 @endif
-            </button>
-            <ul class="dropdown-content menu p-2 shadow bg-white rounded-box w-64 -ml-12" style="background-color: white !important;">
+            </label>
+            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-white rounded-box w-64 -ml-12 z-50" style="background-color: white !important;">
                 <li class="p-4 border-b">
                     <h3 class="text-lg font-semibold text-black" style="color: black !important;">Notifications</h3>
                 </li>
                 @if (Auth::user()->role == 'Admin')
-    @forelse ($notifications as $notification)
+    @forelse ($notifications->where('read_at', null)->take(3) as $notification)
         <li class="border-b last:border-none">
             <a href="{{ getNotificationLink($notification) }}"
                class="block px-4 py-2 text-sm text-black hover:bg-gray-100" style="color: black !important;">
@@ -112,7 +106,7 @@
     @endforelse
 
 @elseif (Auth::user()->role == 'Parishioner')
-    @forelse ($notifications->whereIn('type', ['Payment', 'Request', 'Donation', 'Announcement']) as $notification)
+    @forelse ($notifications->where('read_at', null)->take(3) as $notification)
         <li class="border-b last:border-none">
             <a href="{{ getNotificationLink($notification) }}"
                class="block px-4 py-2 text-sm text-black hover:bg-gray-100" style="color: black !important;">
@@ -139,11 +133,9 @@
 @endif
 
                 <li class="p-2 text-center border-t">
-    <a href="javascript:void(0)"
-       id="viewAllNotifications"
-       class="text-sm text-blue-500 hover:underline">
-        View all notifications
-    </a>
+    <label for="viewing_all_notifications" class="text-sm text-blue-500 hover:underline cursor-pointer" onclick="document.activeElement.blur()">
+        View all notifications ({{ $notifications->count() }})
+    </label>
 </li>
 
             </ul>
@@ -179,14 +171,30 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const viewAllBtn = document.getElementById('viewAllNotifications');
+        const notificationBell = document.getElementById('notificationBell');
         const notificationDot = document.getElementById('notification-dot');
+        let hasMarkedAsRead = false;
 
-        if (viewAllBtn) {
-            viewAllBtn.addEventListener('click', function () {
-                if (notificationDot) {
-                    notificationDot.style.display = 'none';
-                }
+        // Mark all notifications as read when bell is clicked
+        if (notificationBell) {
+            notificationBell.addEventListener('click', function () {
+                if (hasMarkedAsRead) return;
+                
+                hasMarkedAsRead = true;
+                fetch('/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && notificationDot) {
+                        notificationDot.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error marking notifications as read:', error));
             });
         }
     });
@@ -195,33 +203,100 @@
 
 <!-- Modal for Viewing All Notifications -->
 <input type="checkbox" id="viewing_all_notifications" class="modal-toggle" />
-<div class="modal">
-    <div class="modal-box w-11/12 max-w-5xl">
-        <h3 class="text-lg font-bold">All Notifications</h3>
-        <ul class="py-4 max-h-96 overflow-y-auto">
-            @forelse ($notifications as $notification)
-                <li class="border-b last:border-none py-2">
-                    <a href="{{ getNotificationLink($notification) }}"
-                        class="block px-4 py-2 text-sm text-black hover:bg-gray-100" style="color: black !important;">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <i class="bx bx-info-circle text-blue-500"></i>
+<div class="modal modal-open:bg-black/50">
+    <div class="modal-box w-11/12 max-w-3xl bg-white shadow-2xl rounded-lg p-0">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <i class='bx bxs-bell text-white text-2xl'></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">All Notifications</h3>
+                        <p class="text-blue-100 text-sm">{{ $notifications->count() }} total notifications</p>
+                    </div>
+                </div>
+                <label for="viewing_all_notifications" class="btn btn-ghost btn-sm btn-circle text-white hover:bg-white/20">
+                    <i class='bx bx-x text-2xl'></i>
+                </label>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-4">
+            <ul class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                @forelse ($notifications->take(8) as $notification)
+                    <li class="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow {{ $notification->read_at ? 'opacity-70' : '' }}">
+                        <a href="{{ getNotificationLink($notification) }}" 
+                           class="block p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3 flex-1">
+                                    <!-- Icon -->
+                                    <div class="flex-shrink-0 mt-1">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $notification->read_at ? 'bg-gray-100' : 'bg-blue-50' }}">
+                                            @if($notification->type === 'Request')
+                                                <i class='bx bx-file text-lg {{ $notification->read_at ? "text-gray-400" : "text-blue-600" }}'></i>
+                                            @elseif($notification->type === 'Donation')
+                                                <i class='bx bx-donate-heart text-lg {{ $notification->read_at ? "text-gray-400" : "text-green-600" }}'></i>
+                                            @elseif($notification->type === 'Payment')
+                                                <i class='bx bx-money text-lg {{ $notification->read_at ? "text-gray-400" : "text-yellow-600" }}'></i>
+                                            @elseif($notification->type === 'Announcement')
+                                                <i class='bx bx-megaphone text-lg {{ $notification->read_at ? "text-gray-400" : "text-purple-600" }}'></i>
+                                            @else
+                                                <i class='bx bx-info-circle text-lg {{ $notification->read_at ? "text-gray-400" : "text-blue-600" }}'></i>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between mb-1">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                {{ $notification->type === 'Request' ? 'bg-blue-100 text-blue-700' : '' }}
+                                                {{ $notification->type === 'Donation' ? 'bg-green-100 text-green-700' : '' }}
+                                                {{ $notification->type === 'Payment' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                                {{ $notification->type === 'Announcement' ? 'bg-purple-100 text-purple-700' : '' }}">
+                                                {{ $notification->type }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-900 mb-1">{{ $notification->message }}</p>
+                                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                                            <i class='bx bx-time-five'></i>
+                                            <span>{{ $notification->created_at->diffForHumans() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Unread Indicator -->
+                                @if(!$notification->read_at)
+                                    <div class="flex-shrink-0">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    </div>
+                                @endif
                             </div>
-                            <div class="ml-3"
-                                <p class="text-sm font-medium" style="color: black !important;">{{ $notification->message }}</p>
-                                <p class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</p>
-                            </div>
+                        </a>
+                    </li>
+                @empty
+                    <li class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class='bx bx-bell-off text-3xl text-gray-400'></i>
                         </div>
-                    </a>
-                </li>
-            @empty
-                <li>
-                    <span class="block px-4 py-2 text-sm text-black" style="color: black !important;">No notifications available</span>
-                </li>
-            @endforelse
-        </ul>
-        <div class="modal-action">
-            <label for="viewing_all_notifications" class="btn">Close</label>
+                        <p class="text-gray-500 font-medium">No notifications available</p>
+                        <p class="text-gray-400 text-sm mt-1">You're all caught up!</p>
+                    </li>
+                @endforelse
+            </ul>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200">
+            <div class="flex items-center justify-end">
+                <label for="viewing_all_notifications" class="btn bg-blue-600 hover:bg-blue-700 text-white border-none">
+                    <i class='bx bx-check mr-2'></i>
+                    Close
+                </label>
+            </div>
         </div>
     </div>
 </div>

@@ -119,11 +119,21 @@ class DonationService
             }
 
             try {
+                // Notification for admin
                 Notification::create([
                     'type' => 'Donation',
-                    'message' => 'A new donation has been made by ' . $request->donor_name,
-                    'is_read' => '0',
+                    'message' => 'A donation was received by ' . $request->donor_name,
+                    'user_id' => null, // Admin sees all
                 ]);
+
+                // Notification for parishioner who made the donation
+                if (Auth::check()) {
+                    Notification::create([
+                        'type' => 'Donation',
+                        'message' => 'Your donation was received successfully. Thank you!',
+                        'user_id' => Auth::id(),
+                    ]);
+                }
             } catch (QueryException $notifError) {
                 Log::warning('Notification creation failed', ['error' => $notifError->getMessage()]);
                 // Continue even if notification fails
@@ -212,10 +222,11 @@ class DonationService
 
             $donations->delete();
 
+            // Notification for admin only (deletion action)
             Notification::create([
                 'type' => 'Donation',
-                'message' => 'A new donation has been deleted by ' . Auth::user()->name,
-                'is_read' => false,
+                'message' => 'A donation has been deleted by ' . Auth::user()->name,
+                'user_id' => null,
             ]);
 
             session()->flash('success', 'Donation deleted successfully');

@@ -172,6 +172,10 @@ Route::middleware(['Admin'])->group(function () {
 
     Route::post('/admin/documents/{id}', [DocumentController::class, 'restore'])->name('documents.restore');
 
+    // Notification Routes
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+
 });
 
 // Parishioner Routes

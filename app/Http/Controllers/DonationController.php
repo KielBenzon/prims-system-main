@@ -373,11 +373,21 @@ class DonationController extends Controller
                 'status' => 'Received',
             ]);
 
+            // Notification for admin
             Notification::create([
                 'type' => 'Donation',
-                'message' => 'A donation was received by ' . Auth::user()->name,
-                'is_read' => '0',
+                'message' => 'Donation marked as received by ' . Auth::user()->name,
+                'user_id' => null,
             ]);
+
+            // Notification for parishioner who made the donation
+            if ($donation->user_id) {
+                Notification::create([
+                    'type' => 'Donation',
+                    'message' => 'Your donation has been received. Thank you for your generosity!',
+                    'user_id' => $donation->user_id,
+                ]);
+            }
 
             return redirect()->back()->with('success', 'Donation status updated successfully.');
             

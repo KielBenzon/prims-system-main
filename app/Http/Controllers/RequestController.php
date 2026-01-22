@@ -403,7 +403,7 @@ class RequestController extends Controller
                     return Notification::create([
                         'type' => 'Request',
                         'message' => 'A request has been deleted by ' . Auth::user()->name,
-                        'is_read' => false,
+                        'user_id' => null,
                     ]);
                 }, null);
 
@@ -474,13 +474,28 @@ class RequestController extends Controller
             }
 
             if ($approved) {
+                // Get the request model to access user_id
+                $requestModel = RequestModel::find($id);
+                
                 // Try to create notification with fallback
-                $this->executeWithFallback(function () {
-                    return Notification::create([
+                $this->executeWithFallback(function () use ($requestModel) {
+                    // Notification for admin
+                    Notification::create([
                         'type' => 'Request',
                         'message' => 'A request has been approved by ' . Auth::user()->name,
-                        'is_read' => false,
+                        'user_id' => null,
                     ]);
+
+                    // Notification for parishioner who owns the request
+                    if ($requestModel && $requestModel->user_id) {
+                        Notification::create([
+                            'type' => 'Request',
+                            'message' => 'Your request has been approved!',
+                            'user_id' => $requestModel->user_id,
+                        ]);
+                    }
+
+                    return true;
                 }, null);
 
                 // Clear all request-related caches to ensure fresh data on reload

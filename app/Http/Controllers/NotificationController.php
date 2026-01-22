@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Constant\MyConstant;
 use App\Models\Notification;
+use App\Models\User;
 use App\Notifications\RecordApprovedNotification;
 use App\Services\NotificationService;
 use App\Services\useValidator;
@@ -20,18 +21,61 @@ class NotificationController extends Controller
         return view('admin.notification', compact('notifications'));
     }
 
+    /**
+     * Get notifications for the current user based on their role
+     */
     private function getUserNotifications($user)
     {
         $query = Notification::query();
 
-        if ($user->role === 'Parishioner') {
-            $query->whereIn('type', ['Request', 'Donation', 'Announcement', 'Approved']);
+        if ($user->role === 'Admin') {
+            // Admin sees ALL notifications from all users
+            // These include: requests made, edits, payments, donations
+            $query->orderBy('created_at', 'desc');
+        } else {
+            // Parishioner sees ONLY their own notifications
+            // These include: request status changes (approved/completed), donation approvals
+            $query->where('user_id', $user->id)
+                  ->whereIn('type', ['Request', 'Donation', 'Payment', 'Announcement'])
+                  ->orderBy('created_at', 'desc');
         }
 
-        return $query->get()->map(function ($notification) use ($user) {
-            $notification->message .= ' by ' . $user->name;
-            return $notification;
-        });
+        return $query->get();
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markAsRead($id)
+    {
+        $notification = Notification::findOrFail($id);
+        
+        // Ensure user can only mark their own notifications as read (unless admin)
+        if (Auth::user()->role !== 'Admin' && $notification->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $notification->markAsRead();
+        
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark all notifications as read for current user
+     */
+    public function markAllAsRead()
+    {
+        $user = Auth::user();
+        
+        if ($user->role === 'Admin') {
+            Notification::whereNull('read_at')->update(['read_at' => now()]);
+        } else {
+            Notification::where('user_id', $user->id)
+                       ->whereNull('read_at')
+                       ->update(['read_at' => now()]);
+        }
+        
+        return response()->json(['success' => true]);
     }
 
     public function store(Request $request)
@@ -59,19 +103,4 @@ class NotificationController extends Controller
             'message' => $result['message'],
         ];
     }
-
-    // public function updateRecordStatus($recordId)
-    // {
-    //     $record = Record::findOrFail($recordId);
-
-    //     if ($record->status !== 'approved') {
-    //         $record->status = 'approved';
-    //         $record->save();
-
-    //         // Trigger notification to the record owner
-    //         $record->user->notify(new RecordApprovedNotification($record, Auth::user()->name));
-    //     }
-
-    //     return redirect()->back()->with('success', 'Record status updated to approved and notification sent.');
-    // }
 }

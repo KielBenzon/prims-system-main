@@ -108,7 +108,11 @@
                                             Open PDF Document
                                         </a>
                                     @else
-                                        <img src="{{ $document->file }}" alt="Current Document" class="max-w-full h-auto rounded-lg border border-gray-300" style="max-height: 400px;">
+                                        <img src="{{ $document->file }}" 
+                                            alt="Current Document" 
+                                            class="max-w-full h-auto rounded-lg border border-gray-300 cursor-pointer hover:shadow-lg transition-shadow" 
+                                            style="max-height: 400px;"
+                                            onclick="window.open('{{ $document->file }}', '_blank')">
                                     @endif
                                 </div>
                                 
@@ -215,8 +219,8 @@
         <!-- Add Document Modal -->
         <dialog id="addModal" class="modal">
             <div class="modal-box rounded-lg shadow-lg bg-white">
-                <h3 class="text-lg font-bold mb-4 text-black">Add Document (AI-Powered Classification)</h3>
-                <p class="text-sm text-gray-600 mb-4">Upload your document and our AI will automatically classify it as Baptismal, Marriage, Death, or Confirmation Certificate.</p>
+                <h3 class="text-lg font-bold mb-4 text-black">Add Document</h3>
+                <p class="text-sm text-gray-600 mb-4">Upload your document and select its classification type.</p>
                 <hr class="my-4">
                 <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -227,13 +231,23 @@
                         <input type="text" name="full_name" placeholder="Enter full name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
                     </div>
                     <div class="mb-4">
+                        <label class="block text-gray-700 font-medium">Document Type</label>
+                        <select name="document_type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
+                            <option value="">Select Document Type</option>
+                            <option value="Baptismal Certificate">Baptismal Certificate</option>
+                            <option value="Marriage Certificate">Marriage Certificate</option>
+                            <option value="Death Certificate">Death Certificate</option>
+                            <option value="Confirmation Certificate">Confirmation Certificate</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
                         <label class="block text-gray-700 font-medium">File (PDF, Image, or Document)</label>
                         <input type="file" name="file" id="file_input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.rtf,.bmp,.webp" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black file:text-black file:bg-gray-100 file:border-0 file:px-4 file:py-2 file:rounded file:mr-4" required>
                         <p class="text-xs text-gray-500 mt-2">Supports: PDF, Images (JPG, PNG, BMP, WebP), Word Documents (DOC, DOCX), Text (TXT, RTF). Max size: 10MB</p>
                     </div>
                     <hr class="my-4">
                     <div class="flex justify-end gap-2">
-                        <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" type="submit">Upload & Classify</button>
+                        <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" type="submit">Upload Document</button>
                         <button class="btn bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded" type="button" onclick="addModal.close()">Close</button>
                     </div>
                 </form>

@@ -331,10 +331,18 @@ class RequestService
             }
 
             try {
+                // Notification for admin
                 Notification::create([
                     'type' => 'Request',
                     'message' => 'A new request has been created by ' . Auth::user()->name,
-                    'is_read' => '0',
+                    'user_id' => null,
+                ]);
+
+                // Notification for parishioner who created the request
+                Notification::create([
+                    'type' => 'Request',
+                    'message' => 'Your request has been submitted and is pending review.',
+                    'user_id' => Auth::id(),
                 ]);
             } catch (Exception $e) {
                 Log::warning('Failed to create notification: ' . $e->getMessage());
@@ -629,10 +637,18 @@ if ($request->status === 'Approved') {
 
 
         // Notifications
+        // Notification for admin
         Notification::create([
             'type' => 'Request',
             'message' => 'Request ' . strtolower($request->status) . ' by ' . Auth::user()->name,
-            'is_read' => '0',
+            'user_id' => null,
+        ]);
+
+        // Notification for parishioner who owns the request
+        Notification::create([
+            'type' => 'Request',
+            'message' => 'Your request has been ' . strtolower($request->status) . '.',
+            'user_id' => $request->user_id,
         ]);
 
         return [
@@ -721,10 +737,18 @@ if ($request->status === 'Approved') {
                 ]);
             }
 
+            // Notification for admin
             Notification::create([
                 'type' => 'Request',
                 'message' => 'A new baptismal certificate request has been created by ' . Auth::user()->name,
-                'is_read' => '1',
+                'user_id' => null,
+            ]);
+
+            // Notification for parishioner
+            Notification::create([
+                'type' => 'Request',
+                'message' => 'Your baptismal certificate request has been submitted.',
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('success', 'Request created successfully');
@@ -810,10 +834,18 @@ if ($request->status === 'Approved') {
             'transaction_id' => $transactionUrl,
         ]);
 
+        // Notification for admin
         Notification::create([
             'type' => 'Payment',
-            'message' => 'Payment uploaded and waiting for admin verification.',
-            'is_read' => '0',
+            'message' => 'Payment uploaded by ' . Auth::user()->name . ' and waiting for verification.',
+            'user_id' => null,
+        ]);
+
+        // Notification for parishioner who uploaded payment
+        Notification::create([
+            'type' => 'Payment',
+            'message' => 'Your payment has been uploaded and is waiting for admin verification.',
+            'user_id' => Auth::id(),
         ]);
 
         session()->flash('success', 'Payment submitted. Waiting for admin verification.');

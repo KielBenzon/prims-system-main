@@ -136,11 +136,21 @@ class PaymentController extends Controller
                 }, null);
 
                 $this->executeWithFallback(function () {
-                    return Notification::create([
+                    // Notification for admin
+                    Notification::create([
                         'type'    => 'Payment',
                         'message' => 'A new payment was recorded by ' . Auth::user()->name,
-                        'is_read' => '0',
+                        'user_id' => null,
                     ]);
+
+                    // Notification for parishioner who made the payment
+                    Notification::create([
+                        'type'    => 'Payment',
+                        'message' => 'Your payment has been recorded successfully.',
+                        'user_id' => Auth::id(),
+                    ]);
+
+                    return true;
                 }, null);
 
                 return redirect()->back()->with('success', 'Payment added successfully.');

@@ -32,7 +32,24 @@ class AppServiceProvider extends ServiceProvider
         
         View::composer('layouts.navbar', function ($view) {
             try {
-                $notifications = Notification::orderBy('created_at', 'desc')->where('is_read', false)->get();
+                if (Auth::check()) {
+                    $user = Auth::user();
+                    
+                    if ($user->role === 'Admin') {
+                        // Admin sees all notifications
+                        $notifications = Notification::where('user_id', null)
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+                    } else {
+                        // Parishioner sees only their own notifications
+                        $notifications = Notification::where('user_id', $user->id)
+                            ->whereIn('type', ['Request', 'Donation', 'Payment', 'Announcement'])
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+                    }
+                } else {
+                    $notifications = collect([]);
+                }
             } catch (\Exception $e) {
                 // Fallback to empty collection if database fails
                 $notifications = collect([]);
