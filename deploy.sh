@@ -1,4 +1,7 @@
 #!/bin/bash
+set -e
+
+echo "=== Starting Deployment ==="
 
 # Create symbolic links for public assets
 echo "Creating symbolic links for assets..."
@@ -8,20 +11,48 @@ ln -sf /home/site/wwwroot/public/assets /home/site/wwwroot/assets 2>/dev/null ||
 ln -sf /home/site/wwwroot/public/storage /home/site/wwwroot/storage 2>/dev/null || true
 
 # Install composer dependencies
-composer install --no-dev --optimize-autoloader
+echo "Installing Composer dependencies..."
+composer install --no-dev --optimize-autoloader --no-interaction
 
-# Create .env from example if it doesn't exist
-if [ ! -f .env ]; then
-    cp .env.example .env
-fi
+# Create .env file from environment variables (Azure doesn't create this automatically)
+echo "Creating .env file from environment variables..."
+cat > .env << EOF
+APP_NAME=PRIMS
+APP_ENV=${APP_ENV:-production}
+APP_KEY=${APP_KEY}
+APP_DEBUG=${APP_DEBUG:-false}
+APP_URL=${APP_URL}
 
-# Generate application key if not set
-php artisan key:generate --force
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
 
-# Cache configuration
+SUPABASE_URL=${SUPABASE_URL}
+SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+AZURE_COMPUTER_VISION_KEY=${AZURE_COMPUTER_VISION_KEY}
+AZURE_COMPUTER_VISION_ENDPOINT=${AZURE_COMPUTER_VISION_ENDPOINT}
+
+GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+EOF
+
+# Set permissions BEFORE caching
+echo "Setting permissions..."
+chmod -R 777 storage bootstrap/cache
+
+# Clear and cache configuration
+echo "Caching configuration..."
+php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Set permissions
-chmod -R 755 storage bootstrap/cache
+echo "=== Deployment Complete ==="
