@@ -33,7 +33,5 @@ EOF
 echo "Configuring Nginx for Laravel routing..."
 cp /home/site/wwwroot/nginx.conf /etc/nginx/sites-available/default
 
-# Start PHP-FPM and Nginx
-echo "Starting services..."
-/usr/local/bin/php-fpm -D
-nginx -g "daemon off;"
+echo "=== Startup script complete! ==="
+echo "Azure will now start PHP-FPM and Nginx automatically."
