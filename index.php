@@ -19,7 +19,7 @@ if (!file_exists(__DIR__.'/.env') && getenv('APP_KEY')) {
     $envContent = "APP_NAME=PRIMS\n";
     $envContent .= "APP_ENV=" . (getenv('APP_ENV') ?: 'production') . "\n";
     $envContent .= "APP_KEY=" . getenv('APP_KEY') . "\n";
-    $envContent .= "APP_DEBUG=" . (getenv('APP_DEBUG') ?: 'false') . "\n";
+    $envContent .= "APP_DEBUG=true\n";  // Enable debug mode temporarily
     $envContent .= "APP_URL=" . (getenv('APP_URL') ?: 'https://prims-church-system.azurewebsites.net') . "\n\n";
     
     $envContent .= "DB_CONNECTION=" . (getenv('DB_CONNECTION') ?: 'pgsql') . "\n";
