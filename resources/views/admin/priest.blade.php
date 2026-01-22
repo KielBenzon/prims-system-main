@@ -262,12 +262,12 @@
             <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl bg-white">
                 <h3 class="text-lg font-bold mb-4 text-black">Add Priest</h3>
                 <hr class="my-4">
-                <form action="{{ route('priest.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('priest.store') }}" method="POST" enctype="multipart/form-data" id="addPriestForm" onsubmit="return validatePriestForm(event)">
                     @csrf
                     <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium mb-2">First Name</label>
-                            <input type="text" name="first_name"
+                            <label for="first_name" class="block text-gray-700 font-medium mb-2">First Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="first_name" id="first_name" required
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 style="background-color: white !important; color: black !important;"
                                 placeholder="First Name" />
@@ -282,14 +282,14 @@
                     </div>
                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium mb-2">Last Name</label>
-                            <input type="text" name="last_name"
+                            <label for="last_name" class="block text-gray-700 font-medium mb-2">Last Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="last_name" id="last_name" required
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 style="background-color: white !important; color: black !important;" placeholder="Last Name" />
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium mb-2">Title</label>
-                            <select name="title"
+                            <label for="title" class="block text-gray-700 font-medium mb-2">Title <span class="text-red-500">*</span></label>
+                            <select name="title" id="title" required
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 style="background-color: white !important; color: black !important;">
                                 <option value="" disabled selected>Select Title</option>
@@ -304,8 +304,8 @@
                     </div>
                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium mb-2">Date of Birth</label>
-                            <input type="date" name="date_of_birth"
+                            <label for="date_of_birth" class="block text-gray-700 font-medium mb-2">Date of Birth <span class="text-red-500">*</span></label>
+                            <input type="date" name="date_of_birth" id="date_of_birth" required
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 style="background-color: white !important; color: black !important; color-scheme: light;"
                                 placeholder="Date of Birth" />
@@ -447,5 +447,23 @@ input[type="file"]::-webkit-file-upload-button {
     color-scheme: light;
 }
 </style>
+
+<script src="{{ asset('assets/js/form-validator.js') }}"></script>
+<script>
+function validatePriestForm(event) {
+    event.preventDefault();
+    
+    // Validate form with 5MB max file size
+    if (FormValidator.validateForm('addPriestForm', {
+        fileInputId: 'imageInput',
+        maxFileSize: 5 * 1024 * 1024 // 5MB
+    })) {
+        // If validation passes, submit the form
+        event.target.submit();
+    }
+    
+    return false;
+}
+</script>
 
 </x-app-layout>
