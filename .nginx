@@ -1,0 +1,4 @@
+location / {
+    client_max_body_size 10M;
+    try_files $uri $uri/ /index.php?$query_string;
+}
