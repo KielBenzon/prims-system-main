@@ -29,6 +29,10 @@ post_max_size = 20M
 memory_limit = 256M
 EOF
 
+# Copy Laravel-optimized Nginx configuration
+echo "Configuring Nginx for Laravel routing..."
+cp /home/site/wwwroot/nginx.conf /etc/nginx/sites-available/default
+
 # Start PHP-FPM and Nginx
 echo "Starting services..."
 /usr/local/bin/php-fpm -D
