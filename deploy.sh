@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Copy custom nginx configuration
+if [ -f nginx/default ]; then
+    echo "Copying nginx configuration..."
+    cp nginx/default /etc/nginx/sites-available/default
+    service nginx reload || true
+fi
+
 # Install composer dependencies
 composer install --no-dev --optimize-autoloader
 
