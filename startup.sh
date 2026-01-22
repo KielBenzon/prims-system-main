@@ -33,5 +33,9 @@ EOF
 echo "Configuring Nginx for Laravel routing..."
 cp /home/site/wwwroot/nginx.conf /etc/nginx/sites-available/default
 
+# Reload nginx to apply the new configuration
+echo "Reloading Nginx with Laravel config..."
+nginx -s reload
+
 echo "=== Startup script complete! ==="
-echo "Azure will now start PHP-FPM and Nginx automatically."
+echo "Laravel routing is now active!"
