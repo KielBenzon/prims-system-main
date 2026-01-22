@@ -2,6 +2,19 @@
 
 echo "Running custom startup script..."
 
+# Create required Laravel storage directories
+echo "Creating storage framework directories..."
+mkdir -p /home/site/wwwroot/storage/framework/cache/data
+mkdir -p /home/site/wwwroot/storage/framework/sessions
+mkdir -p /home/site/wwwroot/storage/framework/views
+mkdir -p /home/site/wwwroot/storage/framework/testing
+mkdir -p /home/site/wwwroot/storage/logs
+
+# Set proper permissions
+echo "Setting storage permissions..."
+chmod -R 777 /home/site/wwwroot/storage
+chmod -R 777 /home/site/wwwroot/bootstrap/cache
+
 # Run deployment tasks
 bash /home/site/wwwroot/deploy.sh
 
