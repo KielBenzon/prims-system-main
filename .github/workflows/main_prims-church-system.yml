@@ -67,4 +67,9 @@ jobs:
           app-name: 'prims-church-system'
           slot-name: 'Production'
           package: .
+      
+      - name: 'Configure Web App'
+        run: |
+          az webapp config set --name prims-church-system --resource-group prims-church-system_group --startup-file "/home/site/wwwroot/startup.sh"
+          az webapp restart --name prims-church-system --resource-group prims-church-system_group
           
