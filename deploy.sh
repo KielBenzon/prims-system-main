@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Create symbolic links for public assets
+echo "Creating symbolic links for assets..."
+ln -sf /home/site/wwwroot/public/css /home/site/wwwroot/css 2>/dev/null || true
+ln -sf /home/site/wwwroot/public/js /home/site/wwwroot/js 2>/dev/null || true
+ln -sf /home/site/wwwroot/public/assets /home/site/wwwroot/assets 2>/dev/null || true
+ln -sf /home/site/wwwroot/public/storage /home/site/wwwroot/storage 2>/dev/null || true
+
 # Install composer dependencies
 composer install --no-dev --optimize-autoloader
 
