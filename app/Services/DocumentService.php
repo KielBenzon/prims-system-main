@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Notification;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Element\Text;
@@ -219,9 +220,29 @@ class DocumentService
             'txt'   => file_get_contents($file->getPathname()),
             'rtf'   => strip_tags(file_get_contents($file->getPathname())),
             'jpg', 'jpeg', 'png', 'bmp', 'webp'
-                    => $this->processImageWithTesseract($file->getPathname()),
-            default => $this->processImageWithTesseract($file->getPathname()),
+                    => $this->processImageOCR($file->getPathname()),
+            default => $this->processImageOCR($file->getPathname()),
         };
+    }
+
+    /* =========================================================
+     | IMAGE OCR - AZURE OR TESSERACT FALLBACK
+     ========================================================= */
+    private function processImageOCR($imagePath)
+    {
+        // Try Azure Computer Vision first if configured
+        if (AzureVisionService::isConfigured()) {
+            try {
+                $azureVision = new AzureVisionService();
+                return $azureVision->extractTextFromImage($imagePath);
+            } catch (\Exception $e) {
+                Log::warning('Azure Vision failed, falling back to Tesseract: ' . $e->getMessage());
+                // Fall through to Tesseract
+            }
+        }
+
+        // Fallback to local Tesseract
+        return $this->processImageWithTesseract($imagePath);
     }
 
     /* =========================================================
@@ -230,22 +251,29 @@ class DocumentService
     public function determineDocumentType($text)
     {
         $text = strtolower(preg_replace('/\s+/', ' ', $text));
+        
+        // Log extracted text for debugging
+        Log::info('Document Classification - Extracted Text:', ['text' => substr($text, 0, 500)]);
 
-        // TITLE PRIORITY
-        if (preg_match('/certificate of death|death certificate/', $text)) {
-            return 'Death Certificate';
-        }
-        if (preg_match('/certificate of marriage|marriage certificate/', $text)) {
-            return 'Marriage Certificate';
-        }
-        if (preg_match('/baptismal certificate|certificate of baptism/', $text)) {
-            return 'Baptismal Certificate';
-        }
-        if (preg_match('/confirmation certificate/', $text)) {
+        // TITLE PRIORITY - Check most specific first with flexible patterns
+        if (preg_match('/confirmation.*certificate|certificate.*confirmation|holy.*sacrament.*confirmation/i', $text)) {
+            Log::info('Document classified as: Confirmation Certificate (Title Match)');
             return 'Confirmation Certificate';
         }
+        if (preg_match('/death.*certificate|certificate.*death/i', $text)) {
+            Log::info('Document classified as: Death Certificate (Title Match)');
+            return 'Death Certificate';
+        }
+        if (preg_match('/marriage.*certificate|certificate.*marriage/i', $text)) {
+            Log::info('Document classified as: Marriage Certificate (Title Match)');
+            return 'Marriage Certificate';
+        }
+        if (preg_match('/baptismal.*certificate|certificate.*baptism/i', $text)) {
+            Log::info('Document classified as: Baptismal Certificate (Title Match)');
+            return 'Baptismal Certificate';
+        }
 
-        // WEIGHTED KEYWORDS
+        // WEIGHTED KEYWORDS (Confirmation gets highest weight to override baptism keywords)
         $scores = [
             'Death Certificate' => 0,
             'Marriage Certificate' => 0,
@@ -253,28 +281,31 @@ class DocumentService
             'Confirmation Certificate' => 0,
         ];
 
+        // Confirmation - HIGHEST PRIORITY (10 points per keyword)
+        foreach (['confirmation', 'confirmed', 'sacrament of confirmation'] as $k) {
+            if (str_contains($text, $k)) $scores['Confirmation Certificate'] += 10;
+        }
+
         // Death
         foreach (['death', 'deceased', 'burial', 'cause of death'] as $k) {
             if (str_contains($text, $k)) $scores['Death Certificate'] += 5;
         }
 
         // Marriage
-        foreach (['marriage', 'married', 'bride', 'groom'] as $k) {
-            if (str_contains($text, $k)) $scores['Marriage Certificate'] += 4;
+        foreach (['marriage', 'married', 'bride', 'groom', 'matrimony'] as $k) {
+            if (str_contains($text, $k)) $scores['Marriage Certificate'] += 5;
         }
 
-        // Baptismal
-        foreach (['baptism', 'baptized', 'godparent'] as $k) {
-            if (str_contains($text, $k)) $scores['Baptismal Certificate'] += 4;
-        }
-
-        // Confirmation
-        foreach (['confirmation', 'confirmed'] as $k) {
-            if (str_contains($text, $k)) $scores['Confirmation Certificate'] += 4;
+        // Baptismal - LOWER PRIORITY (3 points)
+        foreach (['baptism', 'baptized', 'godparent', 'christened'] as $k) {
+            if (str_contains($text, $k)) $scores['Baptismal Certificate'] += 3;
         }
 
         arsort($scores);
         $best = array_key_first($scores);
+        
+        Log::info('Document Classification Scores:', $scores);
+        Log::info('Final Classification:', ['type' => $scores[$best] > 0 ? $best : 'Verification Certificate']);
 
         return $scores[$best] > 0 ? $best : 'Verification Certificate';
     }

@@ -144,7 +144,7 @@
 
 
                                     <dialog id="viewModal{{ $request->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg w-11/12 bg-white" style="background-color: white !important;">
+                                        <div class="modal-box rounded-lg shadow-lg w-11/12 bg-white" style="background-color: white !important; max-height: 90vh; overflow-y: auto;">
                                             <div class="flex items-center">
                                                 <button class="btn bg-gray-200 hover:bg-gray-300 text-black me-2 border-0"
                                                     type="button" onclick="viewModal{{ $request->id }}.close()">
@@ -260,7 +260,7 @@
                                                     </div>
                                                 </div>
                                             @endif
-                                            @if ($request->document_type == 'Marriage Certificate' && isset($request->certificate_detail) && property_exists($request->certificate_detail, 'bride_name'))
+                                            @if ($request->document_type == 'Marriage Certificate' && $request->certificate_detail)
                                                 <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Marriage Certificate Details</h2>
                                                 <div class="flex flex-col gap-4">
                                                     <h3 class="text-md font-bold mb-4 text-black" style="color: black !important;">Bride Information</h3>
@@ -498,30 +498,31 @@
                                                     </div>
                                                 </div>
                                             @endif
-                                            @if ($request->document_type == 'Death Certificate' && isset($request->certificate_detail) && property_exists($request->certificate_detail, 'first_name_death'))
-                                                <h2 class="text-lg font-bold mb-4">Death Certificate Details</h2>
+                                            @if ($request->document_type == 'Death Certificate' && $request->certificate_detail)
+                                                <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Death Certificate Details</h2>
                                                 <div class="flex flex-col gap-4">
                                                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                         <div class="sm:col-span-3">
                                                             <label for="first_name_burial"
-                                                                class="block text-sm/6 font-medium text-gray-900">First
+                                                                class="block text-sm/6 font-medium text-black" style="color: black !important;">First
                                                                 Name of Deceased</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="first_name_death"
-                                                                    class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail?->first_name_death }}"
-
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
+                                                                    value="{{ $request->certificate_detail->first_name_death ?? 'N/A' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
                                                         <div class="sm:col-span-3">
                                                             <label for="middle_name_burial"
-                                                                class="block text-sm/6 font-medium text-gray-900">Middle
+                                                                class="block text-sm/6 font-medium text-black" style="color: black !important;">Middle
                                                                 Name of Deceased</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="middle_name_death"
-                                                                    class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail?->middle_name_death }}"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
+                                                                    value="{{ $request->certificate_detail->middle_name_death ?? 'N/A' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
@@ -529,23 +530,25 @@
                                                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                         <div class="sm:col-span-3">
                                                             <label for="last_name_burial"
-                                                                class="block text-sm/6 font-medium text-gray-900">Last
+                                                                class="block text-sm/6 font-medium text-black" style="color: black !important;">Last
                                                                 Name of Deceased</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="last_name_death"
-                                                                    class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail?->middle_name_death }}"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
+                                                                    value="{{ $request->certificate_detail->last_name_death ?? 'N/A' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
                                                         <div class="sm:col-span-3">
                                                             <label for="date_of_birth_death"
-                                                                class="block text-sm/6 font-medium text-gray-900">Date
+                                                                class="block text-sm/6 font-medium text-black" style="color: black !important;">Date
                                                                 of Birth of Deceased</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="date_of_birth_death"
-                                                                    class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail?->date_of_birth_death }}"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
+                                                                    value="{{ $request->certificate_detail->date_of_birth_death ?? 'N/A' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>
@@ -553,12 +556,13 @@
                                                     <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                         <div class="sm:col-span-3">
                                                             <label for="date_of_death"
-                                                                class="block text-sm/6 font-medium text-gray-900">Date
+                                                                class="block text-sm/6 font-medium text-black" style="color: black !important;">Date
                                                                 of Death</label>
                                                             <div class="mt-2">
                                                                 <input type="text" name="date_of_death"
-                                                                    class="input input-bordered w-full max-w-xs"
-                                                                    value="{{ $request->certificate_detail?->date_of_death }}"
+                                                                    class="input input-bordered w-full max-w-xs bg-white text-black border-gray-300"
+                                                                    style="background-color: white !important; color: black !important;"
+                                                                    value="{{ $request->certificate_detail->date_of_death ?? 'N/A' }}"
                                                                     readonly />
                                                             </div>
                                                         </div>

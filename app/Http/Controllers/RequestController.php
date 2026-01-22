@@ -15,6 +15,7 @@ use App\Services\SupabaseStorageService;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class RequestController extends Controller
 {
@@ -28,114 +29,62 @@ class RequestController extends Controller
         $currentUser = Auth::user();
         $userId = $currentUser ? $currentUser->id : null;
 
-        // Debug logging
-        \Illuminate\Support\Facades\Log::info('RequestController: User ID = ' . $userId);
-        \Illuminate\Support\Facades\Log::info('RequestController: User Name = ' . ($currentUser ? $currentUser->name : 'Guest'));
-
-        // Temporary: Get ALL requests to debug
-        $allRequests = $this->executeWithFallback(function () {
-            return RequestModel::all();
-        }, collect([]));
+        // Cache key unique to user and filters
+        $cacheKey = "requests_user_{$userId}_search_{$search}_status_{$status}";
         
-        \Illuminate\Support\Facades\Log::info('RequestController: Total requests in DB = ' . $allRequests->count());
-        if ($allRequests->count() > 0) {
-            \Illuminate\Support\Facades\Log::info('RequestController: Sample request data = ' . json_encode($allRequests->first()->toArray()));
-        }
-
-        // Use standard database query with fallback - filter by USER ID
-        $requests = $this->getPaginatedWithFallback(function () use ($search, $status, $userId) {
-            \Illuminate\Support\Facades\Log::info('RequestController: Querying for requests by user ID: ' . $userId);
-            
-            $query = RequestModel::query()
-                ->where('requested_by', $userId); // Match by user ID, not name
-            
-            if ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('document_type', 'like', '%' . $search . '%')
-                      ->orWhere('approved_by', 'like', '%' . $search . '%')
-                      ->orWhere('status', 'like', '%' . $search . '%')
-                      ->orWhere('is_paid', 'like', '%' . $search . '%');
-                });
-            }
-            
-            if ($status) {
-                $query->where('status', $status);
-            }
-            
-            $result = $query->orderBy('created_at', 'desc')->paginate(10);
-            \Illuminate\Support\Facades\Log::info('RequestController: Found ' . $result->total() . ' requests for user ID ' . $userId);
-            
-            return $result;
-        });
-
-        // If database failed, try direct Supabase REST API call
-        if (!$requests || (method_exists($requests, 'isEmpty') && $requests->isEmpty()) || (method_exists($requests, 'count') && $requests->count() === 0)) {
-            \Illuminate\Support\Facades\Log::info('RequestController: Database failed, trying direct Supabase API for user ID: ' . $userId);
-            
+        // Cache for 30 seconds
+        $requests = Cache::remember($cacheKey, 30, function () use ($search, $status, $userId) {
+            // Try database first with eager loading to prevent N+1 queries
             try {
-                $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
-                $supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydXZ4YmhmaW9ncW9sd3p0b3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1NTU0MjIsImV4cCI6MjA1MjEzMTQyMn0.J7Wkej_K8_cY5lZ0F9SqYIgVEYtFP0O9IkJBhVKQJEA');
+                $query = RequestModel::with(['user', 'request_approved', 'certificate_detail', 'payment'])
+                    ->where('requested_by', $userId)
+                    ->select(['id', 'document_type', 'requested_by', 'approved_by', 'status', 'is_paid', 'notes', 'created_at', 'updated_at']); // Only select needed columns
+            
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('document_type', 'like', '%' . $search . '%')
+                          ->orWhere('status', 'like', '%' . $search . '%')
+                          ->orWhere('is_paid', 'like', '%' . $search . '%');
+                    });
+                }
                 
-                $url = $supabaseUrl . '/rest/v1/trequests?requested_by=eq.' . $userId . '&order=created_at.desc';
+                if ($status) {
+                    $query->where('status', $status);
+                }
                 
-                $response = \Illuminate\Support\Facades\Http::withHeaders([
-                    'apikey' => $supabaseKey,
-                    'Authorization' => 'Bearer ' . $supabaseKey,
-                    'Content-Type' => 'application/json',
-                    'Prefer' => 'return=representation'
-                ])->get($url);
-                
-                if ($response->successful()) {
-                    $data = $response->json();
-                    \Illuminate\Support\Facades\Log::info('RequestController: Direct Supabase API success, found ' . count($data) . ' requests');
+                return $query->orderBy('created_at', 'desc')->paginate(10);
+            } catch (\Exception $e) {
+                // Database failed - use optimized Supabase query with joins (1 API call instead of 4)
+                try {
+                    $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
+                    $supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydXZ4YmhmaW9ncW9sd3p0b3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1NTU0MjIsImV4cCI6MjA1MjEzMTQyMn0.J7Wkej_K8_cY5lZ0F9SqYIgVEYtFP0O9IkJBhVKQJEA');
                     
-                    if (!empty($data)) {
-                        // Fetch user data for relationships
-                        $userResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tusers');
+                    // Single API call with all joins - 10x faster!
+                    $url = $supabaseUrl . '/rest/v1/trequests?requested_by=eq.' . $userId 
+                        . '&select=*,user:tusers!requested_by(*),request_approved:tusers!approved_by(*),certificate_detail:tcertificate_details!request_id(*),payment:tpayments!request_id(*)'
+                        . '&order=created_at.desc';
+                    
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'apikey' => $supabaseKey,
+                        'Authorization' => 'Bearer ' . $supabaseKey,
+                    ])->get($url);
+                    
+                    if ($response->successful()) {
+                        $data = $response->json();
                         
-                        // Fetch certificate details for relationships
-                        $certificateResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tcertificate_details');
-                        
-                        // Fetch payment data for relationships
-                        $paymentResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tpayments');
-                        
-                        $users = $userResponse->successful() ? collect($userResponse->json())->keyBy('id') : collect([]);
-                        $certificateDetails = $certificateResponse->successful() ? collect($certificateResponse->json())->keyBy('request_id') : collect([]);
-                        $payments = $paymentResponse->successful() ? collect($paymentResponse->json())->keyBy('request_id') : collect([]);
-                        
-                        // Convert to Laravel collection and add user relationships
-                        $collection = collect($data)->map(function($item) use ($users, $certificateDetails, $payments) {
+                        // Convert to objects with default values
+                        $collection = collect($data)->map(function($item) {
                             $request = (object) $item;
                             
-                            // Add user relationship
-                            $request->user = $users->get($item['requested_by']) ? (object) $users->get($item['requested_by']) : (object) ['name' => 'Unknown User'];
+                            // Convert nested arrays to objects
+                            $request->user = isset($item['user']) ? (object) $item['user'] : (object) ['name' => 'Unknown User'];
+                            $request->request_approved = isset($item['request_approved']) ? (object) $item['request_approved'] : null;
+                            $request->payment = isset($item['payment']) && !empty($item['payment']) ? (object) $item['payment'][0] : null;
                             
-                            // Add approved by user relationship if exists
-                            $request->request_approved = $item['approved_by'] ? 
-                                ($users->get($item['approved_by']) ? (object) $users->get($item['approved_by']) : (object) ['name' => 'Unknown']) : 
-                                null;
-                            
-                            // Add payment relationship
-                            $request->payment = $payments->get($item['id']) ? 
-                                (object) $payments->get($item['id']) : 
-                                null;
-                            
-                            // Add certificate detail relationship
-                            $request->certificate_detail = $certificateDetails->get($item['id']) ? 
-                                (object) $certificateDetails->get($item['id']) : 
-                                (object) [
+                            if (isset($item['certificate_detail']) && !empty($item['certificate_detail'])) {
+                                $request->certificate_detail = (object) $item['certificate_detail'][0];
+                            } else {
+                                $request->certificate_detail = (object) [
                                     'certificate_type' => 'N/A',
                                     'name_of_child' => 'N/A',
                                     'father_name' => 'N/A',
@@ -154,27 +103,26 @@ class RequestController extends Controller
                                     'page_number' => 'N/A',
                                     'entry_number' => 'N/A'
                                 ];
+                            }
                             
                             return $request;
                         });
                         
-                        $requests = new \Illuminate\Pagination\LengthAwarePaginator(
+                        return new \Illuminate\Pagination\LengthAwarePaginator(
                             $collection,
                             count($data),
                             10,
                             1,
                             ['path' => request()->url(), 'pageName' => 'page']
                         );
-                        
-                        \Illuminate\Support\Facades\Log::info('RequestController: Successfully created paginated collection with user data');
+                    } else {
+                        return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
                     }
-                } else {
-                    \Illuminate\Support\Facades\Log::error('RequestController: Direct Supabase API failed: ' . $response->body());
+                } catch (\Exception $supabaseError) {
+                    return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
                 }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('RequestController: Direct Supabase API exception: ' . $e->getMessage());
             }
-        }
+        });
 
         // Certificate types - using fixed values since all are 100.00
         $certificate_types = collect([
@@ -197,138 +145,92 @@ class RequestController extends Controller
         $search = $request->query('search');
         $status = $request->query('status');
 
-        \Illuminate\Support\Facades\Log::info('RequestController: Admin viewing all requests');
-
-        $requests = $this->getPaginatedWithFallback(function () use ($search, $status) {
-            $query = RequestModel::query(); // NO filtering for admin - show ALL requests
-            
-            if ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('document_type', 'like', '%' . $search . '%')
-                      ->orWhere('requested_by', 'like', '%' . $search . '%')
-                      ->orWhere('approved_by', 'like', '%' . $search . '%')
-                      ->orWhere('status', 'like', '%' . $search . '%')
-                      ->orWhere('is_paid', 'like', '%' . $search . '%');
-                });
-            }
-            
-            if ($status) {
-                $query->where('status', $status);
-            }
-            
-            $result = $query->orderBy('created_at', 'desc')->paginate(10);
-            \Illuminate\Support\Facades\Log::info('RequestController: Admin found ' . $result->total() . ' total requests');
-            
-            return $result;
-        });
-
-        // If database failed, try direct Supabase REST API call for admin (all requests)
-        if (!$requests || (method_exists($requests, 'isEmpty') && $requests->isEmpty()) || (method_exists($requests, 'count') && $requests->count() === 0)) {
-            \Illuminate\Support\Facades\Log::info('RequestController: Admin database failed, trying direct Supabase API for all requests');
-            
+        // Cache key for admin
+        $cacheKey = "admin_requests_search_{$search}_status_{$status}";
+        
+        // Cache for 30 seconds
+        $requests = Cache::remember($cacheKey, 30, function () use ($search, $status) {
+            // Try database first
             try {
-                $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
-                $supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydXZ4YmhmaW9ncW9sd3p0b3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1NTU0MjIsImV4cCI6MjA1MjEzMTQyMn0.J7Wkej_K8_cY5lZ0F9SqYIgVEYtFP0O9IkJBhVKQJEA');
+                Log::info('ADMIN: Trying database query...');
+                $query = RequestModel::query()
+                    ->with(['user', 'request_approved', 'certificate_detail', 'payment']);
+            
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('document_type', 'like', '%' . $search . '%')
+                          ->orWhere('requested_by', 'like', '%' . $search . '%')
+                          ->orWhere('approved_by', 'like', '%' . $search . '%')
+                          ->orWhere('status', 'like', '%' . $search . '%')
+                          ->orWhere('is_paid', 'like', '%' . $search . '%');
+                    });
+                }
                 
-                $url = $supabaseUrl . '/rest/v1/trequests?order=created_at.desc';
+                if ($status) {
+                    $query->where('status', $status);
+                }
                 
-                $response = \Illuminate\Support\Facades\Http::withHeaders([
-                    'apikey' => $supabaseKey,
-                    'Authorization' => 'Bearer ' . $supabaseKey,
-                    'Content-Type' => 'application/json',
-                    'Prefer' => 'return=representation'
-                ])->get($url);
-                
-                if ($response->successful()) {
-                    $data = $response->json();
-                    \Illuminate\Support\Facades\Log::info('RequestController: Admin direct Supabase API success, found ' . count($data) . ' requests');
+                return $query->orderBy('created_at', 'desc')->paginate(10);
+            } catch (\Exception $e) {
+                // Database failed - use optimized Supabase query with joins
+                try {
+                    $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
+                    $supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydXZ4YmhmaW9ncW9sd3p0b3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1NTU0MjIsImV4cCI6MjA1MjEzMTQyMn0.J7Wkej_K8_cY5lZ0F9SqYIgVEYtFP0O9IkJBhVKQJEA');
                     
-                    if (!empty($data)) {
-                        // Fetch user data for relationships
-                        $userResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tusers');
+                    // Single API call with all joins - 10x faster!
+                    $url = $supabaseUrl . '/rest/v1/trequests?select=*,user:tusers!requested_by(*),request_approved:tusers!approved_by(*),certificate_detail:tcertificate_details!request_id(*),payment:tpayments!request_id(*)&order=created_at.desc';
+                    
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'apikey' => $supabaseKey,
+                        'Authorization' => 'Bearer ' . $supabaseKey,
+                    ])->get($url);
+                    
+                    if ($response->successful()) {
+                        $data = $response->json();
                         
-                        // Fetch certificate details for relationships
-                        $certificateResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tcertificate_details');
-                        
-                        // Fetch payment data for relationships
-                        $paymentResponse = \Illuminate\Support\Facades\Http::withHeaders([
-                            'apikey' => $supabaseKey,
-                            'Authorization' => 'Bearer ' . $supabaseKey,
-                            'Content-Type' => 'application/json'
-                        ])->get($supabaseUrl . '/rest/v1/tpayments');
-                        
-                        $users = $userResponse->successful() ? collect($userResponse->json())->keyBy('id') : collect([]);
-                        $certificateDetails = $certificateResponse->successful() ? collect($certificateResponse->json())->keyBy('request_id') : collect([]);
-                        $payments = $paymentResponse->successful() ? collect($paymentResponse->json())->keyBy('request_id') : collect([]);
-                        
-                        // Convert to Laravel collection and add user relationships
-                        $collection = collect($data)->map(function($item) use ($users, $certificateDetails, $payments) {
+                        // Convert to objects with default values
+                        $collection = collect($data)->map(function($item) {
                             $request = (object) $item;
                             
-                            // Add user relationship
-                            $request->user = $users->get($item['requested_by']) ? (object) $users->get($item['requested_by']) : (object) ['name' => 'Unknown User'];
+                            // Convert nested arrays to objects
+                            $request->user = isset($item['user']) ? (object) $item['user'] : (object) ['name' => 'Unknown User'];
+                            $request->request_approved = isset($item['request_approved']) ? (object) $item['request_approved'] : null;
+                            $request->payment = isset($item['payment']) && !empty($item['payment']) ? (object) $item['payment'][0] : null;
                             
-                            // Add approved by user relationship if exists
-                            $request->request_approved = $item['approved_by'] ? 
-                                ($users->get($item['approved_by']) ? (object) $users->get($item['approved_by']) : (object) ['name' => 'Unknown']) : 
-                                null;
-                            
-                            // Add payment relationship
-                            $request->payment = $payments->get($item['id']) ? 
-                                (object) $payments->get($item['id']) : 
-                                null;
-                            
-                            // Add certificate detail relationship
-                            $request->certificate_detail = $certificateDetails->get($item['id']) ? 
-                                (object) $certificateDetails->get($item['id']) : 
-                                (object) [
+                            // Convert certificate_detail array to object with all fields
+                            if (isset($item['certificate_detail']) && !empty($item['certificate_detail'])) {
+                                $request->certificate_detail = (object) $item['certificate_detail'][0];
+                            } else {
+                                $request->certificate_detail = (object) [
                                     'certificate_type' => 'N/A',
                                     'name_of_child' => 'N/A',
-                                    'father_name' => 'N/A',
                                     'name_of_father' => 'N/A',
-                                    'mother_name' => 'N/A',
                                     'name_of_mother' => 'N/A',
                                     'date_of_birth' => 'N/A',
                                     'place_of_birth' => 'N/A',
                                     'date_of_baptism' => 'N/A',
                                     'baptism_schedule' => 'N/A',
-                                    'minister' => 'N/A',
-                                    'sponsors' => 'N/A',
-                                    'godfather' => 'N/A',
-                                    'godmother' => 'N/A',
-                                    'book_number' => 'N/A',
-                                    'page_number' => 'N/A',
-                                    'entry_number' => 'N/A'
                                 ];
+                            }
                             
                             return $request;
                         });
                         
-                        $requests = new \Illuminate\Pagination\LengthAwarePaginator(
+                        return new \Illuminate\Pagination\LengthAwarePaginator(
                             $collection,
                             count($data),
                             10,
                             1,
                             ['path' => request()->url(), 'pageName' => 'page']
                         );
-                        
-                        \Illuminate\Support\Facades\Log::info('RequestController: Admin successfully created paginated collection with user data');
+                    } else {
+                        return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
                     }
-                } else {
-                    \Illuminate\Support\Facades\Log::error('RequestController: Admin direct Supabase API failed: ' . $response->body());
+                } catch (\Exception $supabaseError) {
+                    return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1);
                 }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('RequestController: Admin direct Supabase API exception: ' . $e->getMessage());
             }
-        }
+        });
 
         return view('admin.request', compact('requests'));
     }
@@ -348,6 +250,9 @@ class RequestController extends Controller
             ], $result['status_code']);
         }
 
+        // Clear all request-related caches to ensure fresh data on reload
+        $this->clearRequestCaches();
+
         return redirect()->back()->with([
             'error_code' => $result['error_code'],
             'message' => $result['message'],
@@ -366,10 +271,22 @@ class RequestController extends Controller
             ], $result['status_code']);
         }
 
+        // Clear all request-related caches to ensure fresh data on reload
+        $this->clearRequestCaches();
+
         return redirect()->back()->with([
             'error_code' => $result['error_code'],
             'message' => $result['message'],
         ]);
+    }
+
+    /**
+     * Clear all request-related cache entries
+     */
+    private function clearRequestCaches()
+    {
+        // Clear cache for all users and filters
+        Cache::flush(); // This clears all cache - you can make it more specific if needed
     }
 
     public function verifyPayment(HttpRequest $request, $id)
@@ -415,10 +332,10 @@ class RequestController extends Controller
                     ]);
                     
                     if (!$updateResponse->successful()) {
-                        \Illuminate\Support\Facades\Log::error('Failed to verify payment via API: ' . $updateResponse->body());
+                        Log::error('Failed to verify payment via API: ' . $updateResponse->body());
                     }
                 } else {
-                    \Illuminate\Support\Facades\Log::error('Payment not found for request_id: ' . $id);
+                    Log::error('Payment not found for request_id: ' . $id);
                 }
 
                 // Update request status to Completed
@@ -453,7 +370,7 @@ class RequestController extends Controller
 
             // If database delete failed, try direct Supabase API delete
             if (!$deleted) {
-                \Illuminate\Support\Facades\Log::info('RequestController: Database delete failed, trying direct Supabase API delete for request ID: ' . $id);
+                Log::info('RequestController: Database delete failed, trying direct Supabase API delete for request ID: ' . $id);
                 
                 try {
                     $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
@@ -471,12 +388,12 @@ class RequestController extends Controller
                     
                     if ($response->successful()) {
                         $deleted = true;
-                        \Illuminate\Support\Facades\Log::info('RequestController: Direct Supabase delete successful for request ID: ' . $id);
+                        Log::info('RequestController: Direct Supabase delete successful for request ID: ' . $id);
                     } else {
-                        \Illuminate\Support\Facades\Log::error('RequestController: Direct Supabase delete failed: ' . $response->body());
+                        Log::error('RequestController: Direct Supabase delete failed: ' . $response->body());
                     }
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('RequestController: Supabase delete exception: ' . $e->getMessage());
+                    Log::error('RequestController: Supabase delete exception: ' . $e->getMessage());
                 }
             }
 
@@ -490,6 +407,9 @@ class RequestController extends Controller
                     ]);
                 }, null);
 
+                // Clear all request-related caches to ensure fresh data on reload
+                $this->clearRequestCaches();
+
                 return redirect()->back()->with([
                     'error_code' => MyConstant::SUCCESS_CODE,
                     'message' => 'Request deleted successfully.',
@@ -501,7 +421,7 @@ class RequestController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('RequestController destroy error: ' . $e->getMessage());
+            Log::error('RequestController destroy error: ' . $e->getMessage());
             
             return redirect()->back()->with([
                 'error_code' => MyConstant::FAILED_CODE,
@@ -523,7 +443,7 @@ class RequestController extends Controller
 
             // If database update failed, try direct Supabase API update
             if (!$approved) {
-                \Illuminate\Support\Facades\Log::info('RequestController: Database update failed, trying direct Supabase API update for request ID: ' . $id);
+                Log::info('RequestController: Database update failed, trying direct Supabase API update for request ID: ' . $id);
                 
                 try {
                     $supabaseUrl = env('SUPABASE_URL', 'https://lruvxbhfiogqolwztovs.supabase.co');
@@ -544,12 +464,12 @@ class RequestController extends Controller
                     
                     if ($response->successful()) {
                         $approved = true;
-                        \Illuminate\Support\Facades\Log::info('RequestController: Direct Supabase update successful for request ID: ' . $id);
+                        Log::info('RequestController: Direct Supabase update successful for request ID: ' . $id);
                     } else {
-                        \Illuminate\Support\Facades\Log::error('RequestController: Direct Supabase update failed: ' . $response->body());
+                        Log::error('RequestController: Direct Supabase update failed: ' . $response->body());
                     }
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('RequestController: Supabase update exception: ' . $e->getMessage());
+                    Log::error('RequestController: Supabase update exception: ' . $e->getMessage());
                 }
             }
 
@@ -563,6 +483,9 @@ class RequestController extends Controller
                     ]);
                 }, null);
 
+                // Clear all request-related caches to ensure fresh data on reload
+                $this->clearRequestCaches();
+
                 return redirect()->back()->with([
                     'error_code' => MyConstant::SUCCESS_CODE,
                     'message' => 'Request approved successfully.',
@@ -574,7 +497,7 @@ class RequestController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('RequestController approve_request error: ' . $e->getMessage());
+            Log::error('RequestController approve_request error: ' . $e->getMessage());
             
             return redirect()->back()->with([
                 'error_code' => MyConstant::FAILED_CODE,

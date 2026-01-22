@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class SupabaseService
 {
@@ -24,57 +25,39 @@ class SupabaseService
             $url .= "&$key=eq.$value";
         }
         
-        $headers = [
-            'apikey: ' . $this->supabaseKey,
-            'Authorization: Bearer ' . $this->supabaseKey,
-            'Content-Type: application/json'
-        ];
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => 'Bearer ' . $this->supabaseKey,
+                'Content-Type' => 'application/json'
+            ])
+            ->get($url);
         
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($httpCode === 200) {
-            return json_decode($response, true);
+        if ($response->successful()) {
+            return $response->json();
         }
         
-        throw new \Exception("Supabase query failed: HTTP $httpCode - $response");
+        throw new \Exception("Supabase query failed: HTTP " . $response->status() . " - " . $response->body());
     }
     
     public function insert($table, $data)
     {
         $url = $this->supabaseUrl . "/rest/v1/$table";
         
-        $headers = [
-            'apikey: ' . $this->supabaseKey,
-            'Authorization: Bearer ' . $this->supabaseKey,
-            'Content-Type: application/json',
-            'Prefer: return=representation'
-        ];
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => 'Bearer ' . $this->supabaseKey,
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
+            ])
+            ->post($url, $data);
         
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($httpCode === 201) {
-            return json_decode($response, true);
+        if ($response->status() === 201) {
+            return $response->json();
         }
         
-        throw new \Exception("Supabase insert failed: HTTP $httpCode - $response");
+        throw new \Exception("Supabase insert failed: HTTP " . $response->status() . " - " . $response->body());
     }
     
     /**

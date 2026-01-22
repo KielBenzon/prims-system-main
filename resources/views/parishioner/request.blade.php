@@ -117,18 +117,19 @@
 
 
 <!-- View Modal -->
-<dialog id="viewModal{{ $request->id }}" class="modal">
-    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl">
+<dialog id="viewModal{{ $request->id }}" class="modal" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl" style="background-color: white !important; color: black !important;">
         <div class="flex justify-between items-start mb-4">
             <div>
-                <h2 class="text-lg font-bold">Request Details</h2>
-                <p class="text-sm text-gray-600">View full information of this request</p>
+                <h2 class="text-lg font-bold" style="color: black !important;">Request Details</h2>
+                <p class="text-sm" style="color: #4b5563 !important;">View full information of this request</p>
             </div>
-            <button class="btn text-black hover:bg-red-700 hover:text-white"
+            <button class="btn border border-gray-300" 
+                style="background-color: white !important; color: black !important;"
                 onclick="document.getElementById('viewModal{{ $request->id }}').close()">✕</button>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 text-sm text-gray-800">
+        <div class="grid grid-cols-2 gap-4 text-sm" style="color: black !important;">
             <div><strong>Document Type:</strong> {{ $request->document_type }}</div>
             <div><strong>Requested By:</strong> {{ $request->user->name }}</div>
             <div><strong>Date & Time Requested:</strong> {{ $request->created_at }}</div>
@@ -137,12 +138,13 @@
             <div><strong>Paid:</strong> {{ $request->is_paid }}</div>
             <div class="col-span-2">
                 <strong>Notes:</strong>
-                <p class="mt-1 p-2 bg-gray-100 rounded">{{ $request->notes ?: 'No notes provided.' }}</p>
+                <p class="mt-1 p-2 rounded" style="background-color: #f3f4f6 !important; color: black !important;">{{ $request->notes ?: 'No notes provided.' }}</p>
             </div>
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button class="btn bg-gray-600 text-white hover:bg-gray-700"
+            <button class="btn border border-gray-300"
+                style="background-color: white !important; color: black !important;"
                 onclick="document.getElementById('viewModal{{ $request->id }}').close()">Close</button>
         </div>
     </div>
@@ -150,414 +152,431 @@
 
 
 <dialog id="editModal{{ $request->id }}" class="modal">
-    <div class="modal-box bg-white" style="background-color: white !important;">
-        <h3 class="font-bold text-lg mb-4 text-black" style="color: black !important;">Edit Request</h3>
+    <div class="modal-box bg-white max-w-4xl" style="background-color: white !important;">
+        <h3 class="font-bold text-xl mb-4 text-black" style="color: black !important;">Edit {{ $request->document_type }} Request</h3>
 
-        <form method="POST" action="{{ route('request.update', $request->id) }}">
+        <form method="POST" action="{{ route('request.update', $request->id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             
+            <!-- Hidden field to preserve document type -->
+            <input type="hidden" name="document_type" value="{{ $request->document_type }}">
 
-            <div class="mb-4">
-                    <label class="block text-black font-medium" style="color: black !important;">Document Type</label>
-                    <select name="document_type"
-    id="document_type_{{ $request->id }}"
-    class="mt-1 block w-full border border-gray-300 rounded-md p-3 bg-white text-black"
-    style="background-color: white !important; color: black !important;">
-    <option value="" style="color: black;">Select Document Type</option>
-    <option value="Baptismal Certificate" style="color: black;">Baptismal Certificate</option>
-    <option value="Marriage Certificate" style="color: black;">Marriage Certificate</option>
-    <option value="Death Certificate" style="color: black;">Death Certificate</option>
-    <option value="Confirmation Certificate" style="color: black;">Confirmation Certificate</option>
-</select>
+            @if($request->document_type == 'Baptismal Certificate')
+                @php
+                    $nameParts = [];
+                    if($request->certificate_detail && $request->certificate_detail->name_of_child) {
+                        $nameParts = explode(' ', trim($request->certificate_detail->name_of_child));
+                    }
+                    $firstName = $nameParts[0] ?? '';
+                    $lastName = count($nameParts) > 1 ? array_pop($nameParts) : '';
+                    $middleName = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : '';
+                @endphp
 
-                </div>
-                <hr class="my-4">
-                <div id="baptism_{{ $request->id }}" class="hidden">
-                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Baptismal Certificate Details</h2>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">First Name of Child: </label>
-                            <input type="text" name="first_name_child" placeholder="First Name of Child"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">First Name of Child:</label>
+                            <input type="text" name="first_name_child" 
+                                value="{{ old('first_name_child', $firstName) }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">Middle Name of Child: </label>
-                            <input type="text" name="middle_name_child" placeholder="Middle Name of Child"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                        <div>
+                            <label class="block text-black font-medium mb-2">Middle Name of Child:</label>
+                            <input type="text" name="middle_name_child" 
+                                value="{{ old('middle_name_child', $middleName) }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">Last Name of Child: </label>
-                            <input type="text" name="last_name_child" placeholder="Last Name of Child"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                        <div>
+                            <label class="block text-black font-medium mb-2">Last Name of Child:</label>
+                            <input type="text" name="last_name_child" 
+                                value="{{ old('last_name_child', $lastName) }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
                     </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Date of Birth: </label>
-                            <input type="date" name="date_of_birth" placeholder="Date of Birth"
-                                class="input input-bordered w-full bg-white text-black border-gray-300"
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Birth:</label>
+                            <input type="date" name="date_of_birth" 
+                                value="{{ old('date_of_birth', $request->certificate_detail->date_of_birth ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Place of Birth: </label>
-                            <input type="text" name="place_of_birth" placeholder="Place of Birth"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
+                        <div>
+                            <label class="block text-black font-medium mb-2">Place of Birth:</label>
+                            <input type="text" name="place_of_birth" 
+                                value="{{ old('place_of_birth', $request->certificate_detail->place_of_birth ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important;">
                         </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Date of Baptism: </label>
-                            <input type="date" name="baptism_schedule" placeholder="Date of Baptism"
-                                class="input input-bordered w-full bg-white text-black border-gray-300"
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Baptism:</label>
+                            <input type="date" name="baptism_schedule" 
+                                value="{{ old('baptism_schedule', $request->certificate_detail->baptism_schedule ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" 
                                 style="background-color: white !important; color: black !important; color-scheme: light;">
                         </div>
                     </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Name of Father: </label>
-                            <input type="text" name="name_of_father" placeholder="Name of Father"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-                                style="background-color: white !important; color: black !important;">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Name of Mother: </label>
-                            <input type="text" name="name_of_mother" placeholder="Name of Mother"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-                                style="background-color: white !important; color: black !important;">
-                        </div>
-                        <div class="sm:col-span-3">
-    <label for="gmail" class="block text-black font-medium" style="color: black !important;">Gmail:</label>
-    <input type="email" 
-           name="gmail" 
-           id="gmail"
-           placeholder="Enter your Gmail"
-           class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-           style="background-color: white !important; color: black !important;"
-           value="{{ old('gmail', $request->user->email ?? '') }}" />
-</div>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Name of Father:</label>
+                            <input type="text" name="name_of_father" 
+                                value="{{ old('name_of_father', $request->certificate_detail->name_of_father ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" 
+                                style="background-color: white !important; color: black !important;">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Name of Mother:</label>
+                            <input type="text" name="name_of_mother" 
+                                value="{{ old('name_of_mother', $request->certificate_detail->name_of_mother ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" 
+                                style="background-color: white !important; color: black !important;">
+                        </div>
                     </div>
                 </div>
 
-                <div id="marriage_{{ $request->id }}" class="hidden">
-                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Marriage Certificate Details</h2>
-                    <h3 class="text-md font-bold mb-4 text-black" style="color: black !important;">Bride Information</h3>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">First Name of Bride: </label>
-                            <input type="text" name="bride_first_name" placeholder="First Name of Bride"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-                                style="background-color: white !important; color: black !important;">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">Middle Name of Bride: </label>
-                            <input type="text" name="bride_middle_name" placeholder="Middle Name of Bride"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-                                style="background-color: white !important; color: black !important;">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-black font-medium" style="color: black !important;">Last Name of Bride: </label>
-                            <input type="text" name="bride_last_name" placeholder="Last Name of Bride"
-                                class="input input-bordered w-full bg-white text-black border-gray-300 placeholder-gray-500"
-                                style="background-color: white !important; color: black !important;">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-black font-medium" style="color: black !important;">Birthdate of Bride: </label>
-                            <input type="date" id="birthdate_bride" name="birthdate_bride"
-                                placeholder="Birthdate of Bride" class="input input-bordered w-full bg-white text-black border-gray-300"
-                                style="background-color: white !important; color: black !important; color-scheme: light;">
-                        </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Age of Bride: </label>
-                            <input type="text" id="age_bride" name="age_bride" placeholder="Age of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Birthplace of Bride: </label>
-                            <input type="text" name="birthplace_bride" placeholder="Birthplace of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Citizenship of Bride: </label>
-                            <input type="text" name="citizenship_bride" placeholder="Citizenship of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Religion of Bride: </label>
-                            <input type="text" name="religion_bride" placeholder="Religion of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Residence of Bride: </label>
-                            <input type="text" name="residence_bride" placeholder="Residence of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Civil Status of Bride: </label>
-                            <input type="text" name="civil_status_bride" placeholder="Civil Status of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Name of Father of Bride: </label>
-                            <input type="text" name="name_of_father_bride" placeholder="Name of Father of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Name of Mother of Bride: </label>
-                            <input type="text" name="name_of_mother_bride" placeholder="Name of Mother of Bride"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <h3 class="text-md font-bold mb-4">Groom Information</h3>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">First Name of Groom: </label>
-                            <input type="text" name="groom_first_name" placeholder="First Name of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">Middle Name of Groom: </label>
-                            <input type="text" name="groom_middle_name" placeholder="Middle Name of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">Last Name of Groom: </label>
-                            <input type="text" name="groom_last_name" placeholder="Last Name of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Birthdate of Groom: </label>
-                            <input type="date" id="birthdate_groom" name="birthdate_groom"
-                                placeholder="Birthdate of Groom" class="input input-bordered w-full">
-                        </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Age of Groom: </label>
-                            <input type="text" id="age_groom" name="age_groom" placeholder="Age of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Birthplace of Groom: </label>
-                            <input type="text" name="birthplace_groom" placeholder="Birthplace of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Citizenship of Groom: </label>
-                            <input type="text" name="citizenship_groom" placeholder="Citizenship of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Religion of Groom: </label>
-                            <input type="text" name="religion_groom" placeholder="Religion of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Residence of Groom: </label>
-                            <input type="text" name="residence_groom" placeholder="Residence of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Civil Status of Groom: </label>
-                            <input type="text" name="civil_status_groom" placeholder="Civil Status of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Name of Father of Groom: </label>
-                            <input type="text" name="name_of_father_groom" placeholder="Name of Father of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Name of Mother of Groom: </label>
-                            <input type="text" name="name_of_mother_groom" placeholder="Name of Mother of Groom"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-    <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
-    <input type="email" 
-           name="gmail" 
-           id="gmail"
-           placeholder="Enter your Gmail"
-           class="input input-bordered w-full" 
-           value="{{ old('gmail', $request->user->email ?? '') }}" />
-</div>
-                    </div>
-                </div>
+            @elseif($request->document_type == 'Marriage Certificate')
+                @php
+                    $brideNameParts = [];
+                    $groomNameParts = [];
+                    if($request->certificate_detail) {
+                        if($request->certificate_detail->bride_name) {
+                            $brideNameParts = explode(' ', trim($request->certificate_detail->bride_name));
+                        }
+                        if($request->certificate_detail->name_of_groom) {
+                            $groomNameParts = explode(' ', trim($request->certificate_detail->name_of_groom));
+                        }
+                    }
+                    $brideFirst = $brideNameParts[0] ?? '';
+                    $brideLast = count($brideNameParts) > 1 ? array_pop($brideNameParts) : '';
+                    $brideMiddle = count($brideNameParts) > 1 ? implode(' ', array_slice($brideNameParts, 1)) : '';
+                    
+                    $groomFirst = $groomNameParts[0] ?? '';
+                    $groomLast = count($groomNameParts) > 1 ? array_pop($groomNameParts) : '';
+                    $groomMiddle = count($groomNameParts) > 1 ? implode(' ', array_slice($groomNameParts, 1)) : '';
+                @endphp
 
-                <div id="death_{{ $request->id }}" class="hidden">
-    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Death Certificate Details</h2>
-    <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
-
-        <!-- First Name -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">First Name of Deceased:</label>
-            <input type="text" name="first_name_death" placeholder="First Name"
-                   class="input input-bordered w-full">
-        </div>
-
-        <!-- Middle Name -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">Middle Name of Deceased:</label>
-            <input type="text" name="middle_name_death" placeholder="Middle Name"
-                   class="input input-bordered w-full">
-        </div>
-
-        <!-- Last Name -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">Last Name of Deceased:</label>
-            <input type="text" name="last_name_death" placeholder="Last Name"
-                   class="input input-bordered w-full">
-        </div>
-
-        <!-- Date of Birth -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">Date of Birth:</label>
-            <input type="date" name="date_of_birth_death" class="input input-bordered w-full">
-        </div>
-
-        <!-- Date of Death -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">Date of Death:</label>
-            <input type="date" name="date_of_death" class="input input-bordered w-full">
-        </div>
-
-        <!-- File Upload -->
-        <div class="sm:col-span-3">
-            <label class="block text-gray-700 font-medium">Death Certificate (Hospital Record):</label>
-            <input type="file" name="file_death" class="input input-bordered w-full flex items-center py-2">
-            <p class="text-gray-500 text-sm italic mt-1">
-                Note: Please attach the death certificate of the deceased.
-            </p>
-        </div>
-
-        <!-- Gmail -->
-        <div class="sm:col-span-3">
-            <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
-            <input type="email" 
-                   name="gmail" 
-                   id="gmail"
-                   placeholder="Enter your Gmail"
-                   class="input input-bordered w-full" 
-                   value="{{ old('gmail', $request->user->email ?? '') }}" />
-        </div>
-
-    </div>
-</div>
-
-
-                <div id="confirmation_{{ $request->id }}" class="hidden">
-                    <h2 class="text-lg font-bold mb-4 text-black" style="color: black !important;">Confirmation Certificate Details</h2>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">First Name: </label>
-                            <input type="text" name="confirmation_first_name" placeholder="First Name"
-                                class="input input-bordered w-full">
+                <div class="grid grid-cols-1 gap-6">
+                    <h3 class="text-lg font-semibold text-black">Bride Information</h3>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">First Name:</label>
+                            <input type="text" name="bride_first_name" 
+                                value="{{ old('bride_first_name', $brideFirst) }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">Middle Name: </label>
-                            <input type="text" name="confirmation_middle_name" placeholder="Middle Name"
-                                class="input input-bordered w-full">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Middle Name:</label>
+                            <input type="text" name="bride_middle_name" 
+                                value="{{ old('bride_middle_name', $brideMiddle) }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-gray-700 font-medium">Last Name: </label>
-                            <input type="text" name="confirmation_last_name" placeholder="Last Name"
-                                class="input input-bordered w-full">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Last Name:</label>
+                            <input type="text" name="bride_last_name" 
+                                value="{{ old('bride_last_name', $brideLast) }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
                     </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Place of Birth: </label>
-                            <input type="text" name="confirmation_place_of_birth" placeholder="Place of Birth"
-                                class="input input-bordered w-full">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Birthdate:</label>
+                            <input type="date" name="birthdate_bride" 
+                                value="{{ old('birthdate_bride', $request->certificate_detail->birthdate_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
                         </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Baptism: </label>
-                            <input type="date" name="confirmation_date_of_baptism" placeholder="Date of Baptism"
-                                class="input input-bordered w-full">
-                        </div>
-                    </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Fathers Name: </label>
-                            <input type="text" name="confirmation_fathers_name" placeholder="Fathers Name"
-                                class="input input-bordered w-full">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Mothers Name: </label>
-                            <input type="text" name="confirmation_mothers_name" placeholder="Mothers Name"
-                                class="input input-bordered w-full">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Age:</label>
+                            <input type="number" name="age_bride" 
+                                value="{{ old('age_bride', $request->certificate_detail->age_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
                     </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Date of Confirmation: </label>
-                            <input type="date" name="confirmation_date_of_confirmation"
-                                placeholder="Date of Confirmation" class="input input-bordered w-full">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Birthplace:</label>
+                            <input type="text" name="birthplace_bride" 
+                                value="{{ old('birthplace_bride', $request->certificate_detail->birthplace_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-gray-700 font-medium">Confirmation Sponsors Name: </label>
-                            <input type="text" name="confirmation_sponsors_name" placeholder="Confirmation Sponsors Name"
-                                class="input input-bordered w-full">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Citizenship:</label>
+                            <input type="text" name="citizenship_bride" 
+                                value="{{ old('citizenship_bride', $request->certificate_detail->citizenship_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
                         </div>
                     </div>
-                    <div class="mb-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <!-- Gmail -->
-        <div class="sm:col-span-3">
-            <label for="gmail" class="block text-gray-700 font-medium">Gmail:</label>
-            <input type="email" 
-                   name="gmail" 
-                   id="gmail"
-                   placeholder="Enter your Gmail"
-                   class="input input-bordered w-full" 
-                   value="{{ old('gmail', $request->user->email ?? '') }}" />
-        </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Religion:</label>
+                            <input type="text" name="religion_bride" 
+                                value="{{ old('religion_bride', $request->certificate_detail->religion_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Residence:</label>
+                            <input type="text" name="residence_bride" 
+                                value="{{ old('residence_bride', $request->certificate_detail->residence_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Civil Status:</label>
+                            <input type="text" name="civil_status_bride" 
+                                value="{{ old('civil_status_bride', $request->certificate_detail->civil_status_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Father's Name:</label>
+                            <input type="text" name="name_of_father_bride" 
+                                value="{{ old('name_of_father_bride', $request->certificate_detail->name_of_father_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Mother's Name:</label>
+                            <input type="text" name="name_of_mother_bride" 
+                                value="{{ old('name_of_mother_bride', $request->certificate_detail->name_of_mother_bride ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h3 class="text-lg font-semibold text-black">Groom Information</h3>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">First Name:</label>
+                            <input type="text" name="groom_first_name" 
+                                value="{{ old('groom_first_name', $groomFirst) }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Middle Name:</label>
+                            <input type="text" name="groom_middle_name" 
+                                value="{{ old('groom_middle_name', $groomMiddle) }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Last Name:</label>
+                            <input type="text" name="groom_last_name" 
+                                value="{{ old('groom_last_name', $groomLast) }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Birthdate:</label>
+                            <input type="date" name="birthdate_groom" 
+                                value="{{ old('birthdate_groom', $request->certificate_detail->birthdate_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Age:</label>
+                            <input type="number" name="age_groom" 
+                                value="{{ old('age_groom', $request->certificate_detail->age_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Birthplace:</label>
+                            <input type="text" name="birthplace_groom" 
+                                value="{{ old('birthplace_groom', $request->certificate_detail->birthplace_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Citizenship:</label>
+                            <input type="text" name="citizenship_groom" 
+                                value="{{ old('citizenship_groom', $request->certificate_detail->citizenship_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Religion:</label>
+                            <input type="text" name="religion_groom" 
+                                value="{{ old('religion_groom', $request->certificate_detail->religion_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Residence:</label>
+                            <input type="text" name="residence_groom" 
+                                value="{{ old('residence_groom', $request->certificate_detail->residence_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Civil Status:</label>
+                            <input type="text" name="civil_status_groom" 
+                                value="{{ old('civil_status_groom', $request->certificate_detail->civil_status_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Father's Name:</label>
+                            <input type="text" name="name_of_father_groom" 
+                                value="{{ old('name_of_father_groom', $request->certificate_detail->name_of_father_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Mother's Name:</label>
+                            <input type="text" name="name_of_mother_groom" 
+                                value="{{ old('name_of_mother_groom', $request->certificate_detail->name_of_mother_groom ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
                     </div>
                 </div>
 
-                
-               <hr class="my-4">
+            @elseif($request->document_type == 'Death Certificate')
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">First Name of Deceased:</label>
+                            <input type="text" name="first_name_death" 
+                                value="{{ old('first_name_death', $request->certificate_detail->first_name_death ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Middle Name of Deceased:</label>
+                            <input type="text" name="middle_name_death" 
+                                value="{{ old('middle_name_death', $request->certificate_detail->middle_name_death ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Last Name of Deceased:</label>
+                            <input type="text" name="last_name_death" 
+                                value="{{ old('last_name_death', $request->certificate_detail->last_name_death ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
 
-<div class="flex justify-end gap-2">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Birth:</label>
+                            <input type="date" name="date_of_birth_death" 
+                                value="{{ old('date_of_birth_death', $request->certificate_detail->date_of_birth_death ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Death:</label>
+                            <input type="date" name="date_of_death" 
+                                value="{{ old('date_of_death', $request->certificate_detail->date_of_death ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
+                        </div>
+                    </div>
 
-    <!-- CLOSE BUTTON (Dialog close only) -->
-    <button type="button" class="btn bg-white text-black border border-gray-300 hover:bg-red-700 hover:text-white"
-        style="background-color: white !important; color: black !important;"
-        onclick="document.getElementById('editModal{{ $request->id }}').close()">
-    Close
-</button>
+                    <div>
+                        <label class="block text-black font-medium mb-2">Death Certificate (Hospital Record):</label>
+                        <input type="file" name="file_death" 
+                            class="file-input file-input-bordered w-full bg-white text-black">
+                        @if($request->certificate_detail && $request->certificate_detail->file_death)
+                            <p class="text-sm text-gray-600 mt-1">Current file: 
+                                <a href="{{ $request->certificate_detail->file_death }}" target="_blank" class="text-blue-600">View</a>
+                            </p>
+                        @endif
+                    </div>
+                </div>
 
+            @elseif($request->document_type == 'Confirmation Certificate')
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">First Name:</label>
+                            <input type="text" name="confirmation_first_name" 
+                                value="{{ old('confirmation_first_name', $request->certificate_detail->confirmation_first_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Middle Name:</label>
+                            <input type="text" name="confirmation_middle_name" 
+                                value="{{ old('confirmation_middle_name', $request->certificate_detail->confirmation_middle_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Last Name:</label>
+                            <input type="text" name="confirmation_last_name" 
+                                value="{{ old('confirmation_last_name', $request->certificate_detail->confirmation_last_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
 
-    <!-- UPDATE REQUEST BUTTON -->
-    <button id="updateRequestBtn"
-        type="submit"
-        class="btn bg-blue-700 hover:bg-blue-800 text-white">
-        Update Request
-    </button>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Place of Birth:</label>
+                            <input type="text" name="confirmation_place_of_birth" 
+                                value="{{ old('confirmation_place_of_birth', $request->certificate_detail->confirmation_place_of_birth ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Baptism:</label>
+                            <input type="date" name="confirmation_date_of_baptism" 
+                                value="{{ old('confirmation_date_of_baptism', $request->certificate_detail->confirmation_date_of_baptism ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
+                        </div>
+                    </div>
 
-</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Father's Name:</label>
+                            <input type="text" name="confirmation_fathers_name" 
+                                value="{{ old('confirmation_fathers_name', $request->certificate_detail->confirmation_fathers_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Mother's Name:</label>
+                            <input type="text" name="confirmation_mothers_name" 
+                                value="{{ old('confirmation_mothers_name', $request->certificate_detail->confirmation_mothers_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-black font-medium mb-2">Date of Confirmation:</label>
+                            <input type="date" name="confirmation_date_of_confirmation" 
+                                value="{{ old('confirmation_date_of_confirmation', $request->certificate_detail->confirmation_date_of_confirmation ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black" style="color-scheme: light;">
+                        </div>
+                        <div>
+                            <label class="block text-black font-medium mb-2">Sponsor's Name:</label>
+                            <input type="text" name="confirmation_sponsors_name" 
+                                value="{{ old('confirmation_sponsors_name', $request->certificate_detail->confirmation_sponsors_name ?? '') }}"
+                                class="input input-bordered w-full bg-white text-black">
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button type="button" class="btn bg-gray-200 hover:bg-gray-300 text-black"
+                    onclick="document.getElementById('editModal{{ $request->id }}').close()">
+                    Close
+                </button>
+                <button type="submit" class="btn bg-blue-600 hover:bg-blue-700 text-white">
+                    Update Request
+                </button>
+            </div>
         </form>
     </dialog>
+
 <dialog id="deleteModal{{ $request->id }}" class="modal">
     <div class="modal-box bg-white" style="background-color: white !important;">
         <h3 class="font-bold text-lg text-red-600" style="color: #dc2626 !important;">Delete Request</h3>
@@ -589,18 +608,19 @@
 
  
 <!-- View Modal -->
-<dialog id="viewModal{{ $request->id }}" class="modal">
-    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl">
+<dialog id="viewModal{{ $request->id }}" class="modal" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-3xl" style="background-color: white !important; color: black !important;">
         <div class="flex justify-between items-start mb-4">
             <div>
-                <h2 class="text-lg font-bold">Request Details</h2>
-                <p class="text-sm text-gray-600">View full information of this request</p>
+                <h2 class="text-lg font-bold" style="color: black !important;">Request Details</h2>
+                <p class="text-sm" style="color: #4b5563 !important;">View full information of this request</p>
             </div>
-            <button class="btn text-black hover:bg-red-700 hover:text-white"
+            <button class="btn border border-gray-300" 
+                style="background-color: white !important; color: black !important;"
                 onclick="document.getElementById('viewModal{{ $request->id }}').close()">✕</button>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 text-sm text-gray-800">
+        <div class="grid grid-cols-2 gap-4 text-sm" style="color: black !important;">
             <div><strong>Document Type:</strong> {{ $request->document_type }}</div>
             <div><strong>Requested By:</strong> {{ $request->user->name }}</div>
             <div><strong>Date & Time Requested:</strong> {{ $request->created_at }}</div>
@@ -609,12 +629,13 @@
             <div><strong>Paid:</strong> {{ $request->is_paid }}</div>
             <div class="col-span-2">
                 <strong>Notes:</strong>
-                <p class="mt-1 p-2 bg-gray-100 rounded">{{ $request->notes ?: 'No notes provided.' }}</p>
+                <p class="mt-1 p-2 rounded" style="background-color: #f3f4f6 !important; color: black !important;">{{ $request->notes ?: 'No notes provided.' }}</p>
             </div>
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button class="btn bg-gray-600 text-white hover:bg-gray-700"
+            <button class="btn border border-gray-300"
+                style="background-color: white !important; color: black !important;"
                 onclick="document.getElementById('viewModal{{ $request->id }}').close()">Close</button>
         </div>
     </div>
@@ -786,20 +807,21 @@
                                 </script>
 
                                 <!-- View Modal -->
-                                <dialog id="viewModal{{ $request->id }}" class="modal">
-                                    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl">
+                                <dialog id="viewModal{{ $request->id }}" class="modal" style="background-color: rgba(0, 0, 0, 0.5);">
+                                    <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl" style="background-color: white !important; color: black !important;">
                                         <div class="flex items-center gap-4">
-                                            <button class="btn bg-gray-200 hover:bg-gray-300 text-black me-2 border-0"
+                                            <button class="btn border border-gray-300"
+                                                style="background-color: white !important; color: black !important;"
                                                 type="button" onclick="viewModal{{ $request->id }}.close()">
                                                 <i class='bx bx-left-arrow-alt'></i>
                                             </button>
                                             <div>
-                                                <h2 class="text-lg font-bold">{{ $request->document_type }}
+                                                <h2 class="text-lg font-bold" style="color: black !important;">{{ $request->document_type }}
                                                     Details</h2>
-                                                <p class="text-gray-600 text-[12px]">Requested by:
+                                                <p class="text-[12px]" style="color: #4b5563 !important;">Requested by:
                                                     {{ $request->requested_by }}
                                                 </p>
-                                                <p class="text-gray-600 text-[12px]">Requested on:
+                                                <p class="text-[12px]" style="color: #4b5563 !important;">Requested on:
                                                     {{ $request->created_at }}
                                                 </p>
                                             </div>
