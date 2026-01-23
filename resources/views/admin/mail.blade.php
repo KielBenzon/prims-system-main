@@ -201,19 +201,18 @@
 
                                     <!-- Delete Modal -->
                                     <dialog id="destroyModal{{ $mail->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg">
-                                            <h3 class="text-lg font-semibold mb-4">Delete Mail</h3>
-                                            <p>Are you sure you want to delete this mail entry?</p>
-                                            <div class="flex justify-end mt-4">
-                                                <button class="btn text-black hover:bg-red-700 hover:text-white me-2"
+                                        <div class="modal-box rounded-lg shadow-lg bg-white" style="background-color: white !important;">
+                                            <h3 class="text-lg font-semibold mb-4 text-black">Delete Mail</h3>
+                                            <p class="text-black">Are you sure you want to delete this mail entry?</p>
+                                            <div class="flex justify-end gap-2 mt-6">
+                                                <button class="btn bg-white text-black border border-gray-300 hover:bg-gray-100"
                                                     type="button"
                                                     onclick="destroyModal{{ $mail->id }}.close()">Cancel</button>
                                                 <form action="{{ route('mail.destroy', $mail->id) }}" method="POST"
-                                                    id="deleteForm">
+                                                    class="inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <hr class="my-4">
-                                                    <button class="btn bg-red-700 hover:bg-red-800 text-white"
+                                                    <button class="btn bg-red-600 hover:bg-red-700 text-white"
                                                         type="submit">Delete</button>
                                                 </form>
                                             </div>
