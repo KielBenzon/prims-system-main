@@ -2,25 +2,27 @@
 window.FormValidator = {
     maxFileSize: 2 * 1024 * 1024, // 2MB in bytes (Azure limit)
     
-    // Show error notification
-    showError(message) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'alert alert-error fixed top-4 right-4 z-50 max-w-md shadow-lg';
-        notification.innerHTML = `
-            <div class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    // Show error text under file input
+    showError(message, fileInput = null) {
+        // Show red text under file input if provided
+        if (fileInput) {
+            // Remove any existing error messages
+            const existingErrors = document.querySelectorAll('.file-size-error-text');
+            existingErrors.forEach(error => error.remove());
+            
+            // Create error text element
+            const errorText = document.createElement('div');
+            errorText.className = 'file-size-error-text text-red-600 text-sm font-semibold mt-2 flex items-center gap-2';
+            errorText.innerHTML = `
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
                 <span>${message}</span>
-            </div>
-        `;
-        document.body.appendChild(notification);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 5000);
+            `;
+            
+            // Insert after file input
+            fileInput.parentNode.insertBefore(errorText, fileInput.nextSibling);
+        }
     },
     
     // Validate required fields
@@ -105,11 +107,42 @@ window.FormValidator = {
 
 // Real-time file size validation
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('File validator loaded - max size: 2MB');
+    
     const fileInputs = document.querySelectorAll('input[type="file"]');
+    console.log('Found ' + fileInputs.length + ' file inputs');
     
     fileInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            FormValidator.validateFileSize(this);
+        input.addEventListener('change', function(e) {
+            console.log('File selected:', this.files[0]?.name, 'Size:', this.files[0]?.size);
+            
+            // Remove any existing error text first
+            const existingErrors = document.querySelectorAll('.file-size-error-text');
+            existingErrors.forEach(error => error.remove());
+            
+            if (!this.files || this.files.length === 0) {
+                this.classList.remove('border-red-500', 'border-2', 'border-green-500');
+                return;
+            }
+            
+            const file = this.files[0];
+            const maxSize = FormValidator.maxFileSize;
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(0);
+            
+            console.log('Checking file size:', fileSizeMB + 'MB', 'Max:', maxSizeMB + 'MB');
+            
+            if (file.size > maxSize) {
+                FormValidator.showError(`File too large (${fileSizeMB}MB). Maximum allowed: ${maxSizeMB}MB. Please choose a smaller file.`, this);
+                this.value = ''; // Clear the input
+                this.classList.add('border-red-500', 'border-2');
+                this.classList.remove('border-green-500');
+                e.preventDefault();
+                return false;
+            } else {
+                this.classList.remove('border-red-500', 'border-2');
+                this.classList.add('border-green-500');
+            }
         });
     });
 });

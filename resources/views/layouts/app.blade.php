@@ -209,6 +209,9 @@
             ).subscribe(function(status) { console.log('Certificate details channel:', status); });
         }
     </script>
+    
+    <!-- File Validation Script -->
+    <script src="{{ asset('assets/js/form-validator.js') }}"></script>
 </body>
 
 </html>
