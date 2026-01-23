@@ -1,6 +1,6 @@
 // Form Validation Helper
 window.FormValidator = {
-    maxFileSize: 5 * 1024 * 1024, // 5MB in bytes
+    maxFileSize: 2 * 1024 * 1024, // 2MB in bytes (Azure limit)
     
     // Show error notification
     showError(message) {
