@@ -95,7 +95,7 @@ class PaymentController extends Controller
             'payment_date'   => 'required|date',
             'payment_method' => 'required|string|max:50',
             'payment_status' => 'required|string|max:50',
-            'proof_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'proof_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         try {
@@ -205,7 +205,7 @@ class PaymentController extends Controller
             'to_pay'        => 'nullable|numeric|min:0',
             'number_copies' => 'nullable|integer|min:1',
             'payment_date'  => 'nullable|date',
-            'proof_image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'proof_image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         try {

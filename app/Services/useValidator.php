@@ -17,7 +17,7 @@ class useValidator
             'date_of_birth' => 'required|date',
             'phone_number' => 'required|string|max:255',
             'ordination_date' => 'required|date',
-            'image' => 'nullable|file|mimes:png,jpg|max:2048',
+            'image' => 'nullable|file|mimes:png,jpg|max:10240',
         ];
     }
 
@@ -50,7 +50,7 @@ class useValidator
     {
         return [
             'full_name' => 'required|string|max:255',
-            'file' => 'nullable|file|mimes:docx,pdf,jpg,jpeg,png|max:2048',
+            'file' => 'nullable|file|mimes:docx,pdf,jpg,jpeg,png|max:10240',
             'uploaded_by' => 'required|string|max:255',
         ];
     }
@@ -63,7 +63,7 @@ class useValidator
             'approved_by' => 'nullable|string|max:255',
             'status' => 'nullable|string|max:255',
             'is_paid' => 'nullable|string|max:255',
-            'file' => 'nullable|file|mimes:png,jpg|max:2048',
+            'file' => 'nullable|file|mimes:png,jpg|max:10240',
 
             // Baptismal Certificate
             'name_of_child' => 'nullable|string|max:255',
@@ -114,7 +114,7 @@ class useValidator
             'burial_schedule' => 'nullable|date',
             'pickup_date_burial' => 'nullable|date',
             'minister_burial' => 'nullable|string|max:255',
-            'file_burial' => 'nullable|file|mimes:docx,pdf,jpg,jpeg,png|max:2048',
+            'file_burial' => 'nullable|file|mimes:docx,pdf,jpg,jpeg,png|max:10240',
 
             // Confirmation Certificate
             'confirmation_first_name' => 'nullable|string|max:255',

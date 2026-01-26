@@ -125,6 +125,13 @@ class DocumentController extends Controller
                 'full_name' => 'required|string',
                 'file' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx,txt,rtf,bmp,webp|max:10240',
                 'uploaded_by' => 'required|string',
+            ], [
+                'full_name.required' => 'Full name is required.',
+                'file.required' => 'Document file is required.',
+                'file.file' => 'Please select a valid file.',
+                'file.mimes' => 'Document must be in PDF, JPG, JPEG, PNG, DOC, DOCX, TXT, RTF, BMP, or WEBP format.',
+                'file.max' => 'Document file must be under 10MB in size.',
+                'uploaded_by.required' => 'Uploader information is required.',
             ]);
 
             if (!$request->hasFile('file')) {
@@ -233,6 +240,10 @@ class DocumentController extends Controller
             if ($request->hasFile('file')) {
                 $request->validate([
                     'file' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,txt,rtf,bmp,webp|max:10240'
+                ], [
+                    'file.file' => 'Please select a valid file.',
+                    'file.mimes' => 'Document must be in PDF, JPG, JPEG, PNG, DOC, DOCX, TXT, RTF, BMP, or WEBP format.',
+                    'file.max' => 'Document file must be under 10MB in size.',
                 ]);
                 
                 // Delete old file from Supabase Storage if it exists

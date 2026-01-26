@@ -530,6 +530,13 @@ class RequestController extends Controller
         $request->validate([
             'transaction_id' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
             'to_pay' => 'required|numeric',
+        ], [
+            'transaction_id.required' => 'Transaction proof image is required.',
+            'transaction_id.image' => 'Transaction proof must be an image file.',
+            'transaction_id.mimes' => 'Transaction proof must be in JPEG, PNG, JPG, or GIF format.',
+            'transaction_id.max' => 'Transaction proof image must be under 10MB in size.',
+            'to_pay.required' => 'Payment amount is required.',
+            'to_pay.numeric' => 'Payment amount must be a valid number.',
         ]);
 
         $transactionUrl = null;

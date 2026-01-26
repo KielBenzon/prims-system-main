@@ -38,11 +38,11 @@ class DonationService
                 ]);
                 
                 if ($validator->fails()) {
-                    session()->flash('error', 'Invalid file format or size');
+                    session()->flash('error', 'Invalid transaction proof file. Please ensure the file is JPG, JPEG, PNG, or PDF format and under 10MB in size.');
                     return [
                         'error_code' => MyConstant::FAILED_CODE,
                         'status_code' => MyConstant::BAD_REQUEST,
-                        'message' => 'Invalid file format or size',
+                        'message' => 'Invalid transaction proof file. Please ensure the file is JPG, JPEG, PNG, or PDF format and under 10MB in size.',
                     ];
                 }
                 
@@ -56,11 +56,11 @@ class DonationService
                     Log::info('Donation transaction uploaded to Supabase', ['url' => $transactionIdUrl]);
                 } else {
                     Log::error('Supabase upload failed for donation', ['error' => $result['error']]);
-                    session()->flash('error', 'Failed to upload transaction proof');
+                    session()->flash('error', 'Failed to upload transaction proof to cloud storage. Please try again or contact support if the problem persists.');
                     return [
                         'error_code' => MyConstant::FAILED_CODE,
                         'status_code' => MyConstant::INTERNAL_SERVER_ERROR,
-                        'message' => 'Failed to upload transaction proof',
+                        'message' => 'Failed to upload transaction proof to cloud storage. Please try again or contact support if the problem persists.',
                     ];
                 }
             }

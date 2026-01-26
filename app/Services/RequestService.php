@@ -230,7 +230,7 @@ class RequestService
                         return [
                             'error_code' => MyConstant::FAILED_CODE,
                             'status_code' => MyConstant::BAD_REQUEST,
-                            'message' => 'Invalid file format or size for death certificate',
+                            'message' => 'Invalid death certificate file. Please ensure the file is PDF, JPG, JPEG, or PNG format and under 10MB in size.',
                         ];
                     }
                     
@@ -247,7 +247,7 @@ class RequestService
                         return [
                             'error_code' => MyConstant::FAILED_CODE,
                             'status_code' => MyConstant::INTERNAL_SERVER_ERROR,
-                            'message' => 'Failed to upload death certificate',
+                            'message' => 'Failed to upload death certificate to cloud storage. Please try again or contact support if the problem persists.',
                         ];
                     }
                 }
