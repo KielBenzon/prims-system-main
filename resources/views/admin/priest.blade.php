@@ -453,10 +453,10 @@ input[type="file"]::-webkit-file-upload-button {
 function validatePriestForm(event) {
     event.preventDefault();
     
-    // Validate form with 5MB max file size
+    // Validate form with 10MB max file size
     if (FormValidator.validateForm('addPriestForm', {
         fileInputId: 'imageInput',
-        maxFileSize: 5 * 1024 * 1024 // 5MB
+        maxFileSize: 10 * 1024 * 1024 // 10MB
     })) {
         // If validation passes, submit the form
         event.target.submit();

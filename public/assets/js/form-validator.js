@@ -1,6 +1,6 @@
 // Form Validation Helper
 window.FormValidator = {
-    maxFileSize: 2 * 1024 * 1024, // 2MB in bytes (Azure limit)
+    maxFileSize: 10 * 1024 * 1024, // 10MB in bytes (upgraded limit)
     
     // Show error text under file input
     showError(message, fileInput = null) {
@@ -107,7 +107,7 @@ window.FormValidator = {
 
 // Real-time file size validation
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('File validator loaded - max size: 2MB');
+    console.log('File validator loaded - max size: 10MB');
     
     const fileInputs = document.querySelectorAll('input[type="file"]');
     console.log('Found ' + fileInputs.length + ' file inputs');
