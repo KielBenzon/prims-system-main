@@ -4,19 +4,19 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-blue-100 p-4 rounded-lg shadow-md cursor-pointer" data-type="Baptismal Certificate">
                     <h3 class="text-lg font-semibold text-black">Baptismal Certificates</h3>
-                    <p class="text-2xl font-bold text-black">{{ $baptismal }}</p>
+                    <p class="text-2xl font-bold">{{ $baptismal }}</p>
                 </div>
                 <div class="bg-[#f5f5dc] p-4 rounded-lg shadow-md cursor-pointer" data-type="Marriage Certificate">
                     <h3 class="text-lg font-semibold text-black">Marriage Certificates</h3>
-                    <p class="text-2xl font-bold text-black">{{ $marriage }}</p>
+                    <p class="text-2xl font-bold">{{ $marriage }}</p>
                 </div>
                 <div class="bg-gray-500 p-4 rounded-lg shadow-md cursor-pointer" data-type="Death Certificate">
                     <h3 class="text-lg font-semibold text-black">Death Certificates</h3>
-                    <p class="text-2xl font-bold text-black">{{ $death }}</p>
+                    <p class="text-2xl font-bold">{{ $death }}</p>
                 </div>
                 <div class="bg-[#c3b091] p-4 rounded-lg shadow-md cursor-pointer" data-type="Confirmation Certificate">
                     <h3 class="text-lg font-semibold text-black">Confirmation Certificates</h3>
-                    <p class="text-2xl font-bold text-black">{{ $confirmation }}</p>
+                    <p class="text-2xl font-bold">{{ $confirmation }}</p>
                 </div>
             </div>
             <div class="bg-white overflow-hidden">
@@ -39,7 +39,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Documents List</h3>
                         <div class="flex space-x-4">
-                            <button class="btn bg-blue-700 text-white hover:bg-blue-800" onclick="addModal.showModal()">
+                            <button class="btn btn-primary" onclick="addModal.showModal()">
                                 Add Document
                             </button>
                             <button onclick="restoreModal.showModal()">
@@ -85,61 +85,48 @@
 
                                     <!-- Edit Modal -->
                                     <dialog id="editModal{{ $document->id }}" class="modal">
-                        <div class="modal-box rounded-lg shadow-lg bg-white w-11/12 max-w-5xl">
-                            <h3 class="text-lg font-bold mb-4 text-black">Edit Document</h3>
-                            <hr class="my-4">
-                            <form action="{{ route('documents.update', $document->id) }}" method="POST" enctype="multipart/form-data" id="editForm">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="uploaded_by" value="{{ Auth::user()->name }}">
-                                <div class="mb-4">
-                                    <label class="block text-gray-700 font-medium">Full Name</label>
-                                    <input type="text" name="full_name" placeholder="Enter donor name" value="{{ $document->full_name }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
-                                </div>
-                                
-                                <!-- Current Document Preview -->
-                                <div class="mb-4">
-                                    <label class="block text-gray-700 font-medium mb-2">Current Document</label>
-                                    @if(str_contains($document->file, '.pdf'))
-                                        <a href="{{ $document->file }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                            </svg>
-                                            Open PDF Document
-                                        </a>
-                                    @else
-                                        <img src="{{ $document->file }}" 
-                                            alt="Current Document" 
-                                            class="max-w-full h-auto rounded-lg border border-gray-300 cursor-pointer hover:shadow-lg transition-shadow" 
-                                            style="max-height: 400px;"
-                                            onclick="window.open('{{ $document->file }}', '_blank')">
-                                    @endif
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-gray-700 font-medium">Upload New File (Optional)</label>
-                                    <input type="file" name="file" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black file:text-black file:bg-gray-100 file:border-0 file:px-4 file:py-2 file:rounded file:mr-4">
-                                    <p class="text-xs text-gray-500 mt-1">Leave empty to keep current file</p>
-                                </div>
-                                <hr class="my-4">
-                                <div class="flex justify-end gap-2">
-                                    <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" type="submit">Update</button>
-                                    <button class="btn bg-white text-black border border-black hover:bg-gray-100 px-4 py-2 rounded" type="button" onclick="editModal{{ $document->id }}.close()">Close</button>
+                                        <div class="modal-box rounded-lg shadow-lg">
+                                            <h3 class="text-lg font-bold mb-4">Edit Document</h3>
+                                            <hr class="my-4">
+                                            <form action="{{ route('documents.update', $document->id) }}" 
+                                                method="POST" enctype="multipart/form-data" id="editForm">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="uploaded_by" value="{{ Auth::user()->name }}">
+                                                <div class="mb-4">
+                                                    <label class="block text-gray-700 font-medium">Full Name</label>
+                                                    <input type="text" name="full_name" placeholder="Enter donor name" value="{{ $document->full_name }}" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 
+                                                    focus:border-blue-500 p-3 transition duration-150 ease-in-out" required>
+                                                </div>
+                                                <div class="mb-4">
+                                                    <label class="block text-gray-700 font-medium">File</label>
+                                                    <input type="file" name="file" placeholder="Enter note" value="{{ $document->file }}" 
+                                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 
+                                                    focus:border-blue-500 p-3 transition duration-150 ease-in-out">
+                                                </div>
+                                                <hr class="my-4">
+                                                <div class="flex justify-end">
+                                                    <button class="btn bg-blue-700 hover:bg-blue-800 text-white" type="submit">Update</button>
+                                                    <button class="btn text-black hover:bg-red-700 hover:text-white" type="button" 
+                                                    onclick="editModal{{ $document->id }}.close()">Close</button>
+                                                </div>
                                             </form>
                                         </div>
                                     </dialog>
 
                                     <!-- Delete Modal -->
                                     <dialog id="destroyModal{{ $document->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg bg-white">
-                                            <h3 class="text-lg font-bold mb-4 text-black">Delete Document</h3>
-                                            <p class="text-gray-700 mb-4">Are you sure you want to delete this document?</p>
+                                        <div class="modal-box rounded-lg shadow-lg">
+                                            <h3 class="text-lg font-bold mb-4">Delete Document</h3>
+                                            <p>Are you sure you want to delete this document?</p>
                                             <form action="{{ route('documents.destroy', $document->id) }}" method="POST" id="deleteForm{{ $document->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <div class="flex justify-end gap-2 mt-4">
-                                                    <button class="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded" type="submit">Delete</button>
-                                                    <button class="btn bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded" type="button" onclick="destroyModal{{ $document->id }}.close()">Close</button>
+                                                <div class="flex justify-end mt-4">
+                                                    <button class="btn bg-red-700 hover:bg-red-800 text-white" type="submit">Delete</button>
+                                                    <button class="btn text-black hover:bg-red-700 hover:text-white" type="button" 
+                                                    onclick="destroyModal{{ $document->id }}.close()">Close</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -147,27 +134,27 @@
 
                                     <!-- View Modal -->
                                     <dialog id="viewModal{{ $document->id }}" class="modal">
-                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl bg-white">
-                                            <h3 class="text-lg font-bold mb-4 text-black">View Document</h3>
-                                            <div class="mb-4">
-                                                <p class="text-black mb-2"><strong>Document Type:</strong> {{ $document->document_type }}</p>
-                                                <p class="text-black mb-2"><strong>Full Name:</strong> {{ $document->full_name }}</p>
-                                                <p class="text-black mb-2"><strong>Uploaded By:</strong> {{ $document->uploaded_by }}</p>
-                                                <p class="text-black mb-4"><strong>Uploaded At:</strong> {{ \Carbon\Carbon::parse($document->created_at)->timezone('Asia/Manila')->format('M d, Y h:i A') }}</p>
-                                            </div>
-                                            
-                                            <!-- Document Display -->
-                                            <div class="mb-4">
-                                                @if(str_contains($document->file, '.pdf'))
-                                                    <iframe src="{{ $document->file }}" class="w-full rounded-lg border border-gray-300" style="height: 600px;"></iframe>
-                                                @else
-                                                    <img src="{{ $document->file }}" alt="{{ $document->full_name }}" class="max-w-full h-auto mx-auto rounded-lg border border-gray-300" style="max-height: 70vh;">
-                                                @endif
-                                            </div>
-                                            
+                                        <div class="modal-box rounded-lg shadow-lg w-11/12 max-w-5xl">
+                                            <h3 class="text-lg font-bold mb-4">View Document</h3>
+                                            <p><strong>Full Name:</strong> {{ $document->full_name }}</p>
+                                            <p><strong>Uploaded By:</strong> {{ $document->uploaded_by }}</p>
+                                            <p><strong>Uploaded At:</strong> {{ \Carbon\Carbon::parse($document->created_at)
+                                            ->timezone('Asia/Manila')->format('M d, Y h:i A') }}</p>
+                                            @php
+                                                $documentPath = match($document->document_type) {
+                                                    'Baptismal Certificate' => 'Baptismal Certificate',
+                                                    'Marriage Certificate' => 'Marriage Certificate',
+                                                    'Death Certificate' => 'Death Certificate',
+                                                    'Confirmation Certificate' => 'Confirmation Certificate',
+                                                    default => 'Unknown',
+                                                };
+                                            @endphp
+                                            <img src="{{ asset('assets/documents/' . $documentPath . '/' . $document->file) }}" 
+                                            class="max-w-full max-h-screen mx-auto">
                                             <hr class="my-4">
                                             <div class="flex justify-end">
-                                                <button class="btn bg-white text-black border border-black hover:bg-gray-100 px-4 py-2 rounded" type="button" onclick="viewModal{{ $document->id }}.close()">Close</button>
+                                                <button class="btn text-black hover:bg-red-700 hover:text-white" type="button" 
+                                                onclick="viewModal{{ $document->id }}.close()">Close</button>
                                             </div>
                                         </div>
                                     </dialog>
@@ -197,13 +184,16 @@
                             <tr class="cursor-pointer" data-document-type="{{ $document->document_type }}">
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $document->document_type }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $document->full_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ strlen($document->file) > 10 ? substr($document->file, 0, 10) . '...' : $document->file }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($document->created_at)->timezone('Asia/Manila')->format('M d, Y h:i A') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ strlen($document->file) > 10 ? substr
+                                ($document->file, 0, 10) . '...' : $document->file }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($document->created_at)
+                                ->timezone('Asia/Manila')->format('M d, Y h:i A') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <form action="{{ route('documents.restore', $document->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('POST')
-                                        <button type="submit" class="btn bg-white text-green-700 border border-green-700 hover:bg-green-700 hover:text-white hover:border-green-700" onclick="event.stopPropagation();">Restore</button>
+                                        <button type="submit" class="btn bg-white text-green-700 border border-green-700 hover:bg-green-700
+                                         hover:text-white hover:border-green-700" onclick="event.stopPropagation();">Restore</button>
                                     </form>
                                 </td>
                             </tr>
@@ -211,98 +201,151 @@
                     </tbody>
                 </table>
                 <div class="flex justify-end">
-                    <button class="btn bg-white text-red-700 border border-red-700 hover:bg-red-700 hover:text-white hover:border-red-700 mt-6" type="button" onclick="restoreModal.close()">Close</button>
+                    <button class="btn bg-white text-red-700 border border-red-700 hover:bg-red-700 hover:text-white hover:border-red-700 mt-6" 
+                    type="button" onclick="restoreModal.close()">Close</button>
                 </div>
             </div>
         </dialog>
 
         <!-- Add Document Modal -->
         <dialog id="addModal" class="modal">
-            <div class="modal-box rounded-lg shadow-lg bg-white">
-                <h3 class="text-lg font-bold mb-4 text-black">Add Document</h3>
-                <p class="text-sm text-gray-600 mb-4">Upload your document and select its classification type.</p>
-                <hr class="my-4">
-                <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" name="uploaded_by" value="{{ Auth::user()->name }}">
-
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium">Full Name</label>
-                        <input type="text" name="full_name" placeholder="Enter full name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium">Document Type</label>
-                        <select name="document_type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black" required>
-                            <option value="">Select Document Type</option>
-                            <option value="Baptismal Certificate">Baptismal Certificate</option>
-                            <option value="Marriage Certificate">Marriage Certificate</option>
-                            <option value="Death Certificate">Death Certificate</option>
-                            <option value="Confirmation Certificate">Confirmation Certificate</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium">File (PDF, Image, or Document)</label>
-                        <input type="file" name="file" id="file_input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.rtf,.bmp,.webp" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 focus:border-blue-500 p-3 transition duration-150 ease-in-out bg-white text-black file:text-black file:bg-gray-100 file:border-0 file:px-4 file:py-2 file:rounded file:mr-4" required>
-                        <p class="text-xs text-gray-500 mt-2">Supports: PDF, Images (JPG, PNG, BMP, WebP), Word Documents (DOC, DOCX), Text (TXT, RTF). Max size: 10MB</p>
-                    </div>
-                    <hr class="my-4">
-                    <div class="flex justify-end gap-2">
-                        <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" type="submit">Upload Document</button>
-                        <button class="btn bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded" type="button" onclick="addModal.close()">Close</button>
+            <div class="modal-box max-w-lg rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold">Add Document</h3>
+                <p class="text-sm text-gray-500 mb-3">
+                    Upload your document. You will choose the document type after clicking upload.</p>
+                    <hr class="mb-5">
+                    <form id="addDocumentForm"action="{{ route('documents.store') }}"method="POST"enctype="multipart/form-data">@csrf
+                        <input type="hidden" name="uploaded_by" value="{{ Auth::user()->name }}">
+                        <input type="hidden" name="document_type" id="document_type">
+                        
+                        <!-- Full Name -->
+                        <div class="mb-4">
+                            <label class="block font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text"name="full_name"placeholder="Enter full name"
+                            class="w-full border border-gray-300 rounded-md px-4 py-3"required>
+                        </div>
+                        
+                        <!-- File Upload -->
+                        <div class="mb-2">
+                            <label class="block font-medium text-gray-700 mb-1">File (PDF, Image, or Document)</label>
+                            <input type="file"name="file"id="fileInput"accept=".pdf,.jpg,.jpeg,.png,.bmp,.webp,.doc,.docx,.txt,.rtf"
+                            class="w-full border border-gray-300 rounded-md px-4 py-2"required>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-6">Supports PDF, Images, Word, Text files. Max size: 10MB</p>
+                        
+                        <!-- Buttons -->
+                        <div class="flex justify-end gap-3">
+                            
+                            <!-- OPEN TYPE MODAL -->
+                            <button type="button"onclick="openTypeModal()"class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                                Upload Document
+                            </button>
+                            <button type="button"onclick="addModal.close()"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-md">
+                            Close
+                        </button>
                     </div>
                 </form>
             </div>
         </dialog>
-
-        <style>
-            .dataTables_length select { width: 60px; }
-            .dataTables_filter { position: relative; }
-            .dataTables_filter input { padding-left: 2rem; }
-            .dataTables_filter i { position: absolute; color: #666; right: 0.5rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
-            .extra { background: white; border: 1px solid black; }
-        </style>
-
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                const table = $('table').DataTable({
-                    "dom": '<"flex justify-between items-center mb-4"lf>t<"flex justify-between items-center mt-4"ip>',
-                    "order": [[4, "desc"]], // Sort by Uploaded At column (index 4) descending
-                    "language": {
-                        "search": "",
-                        "searchPlaceholder": "Search documents...",
-                        "lengthMenu": "Show _MENU_ entries",
-                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                        "paginate": { "previous": "Previous", "next": "Next" }
-                    }
-                });
-                $('.dataTables_filter').prepend("<i class='bx bx-search'></i>");
-
-                $('.grid div').click(function() {
-                    const type = $(this).data('type');
-                    $('tbody tr').each(function() {
-                        if ($(this).data('document-type') === type) $(this).show();
-                        else $(this).hide();
-                    });
-                });
-
-                $('#addModal').on('close.modal', function() { $('#file_input').val(''); });
-            });
-
-            document.addEventListener("DOMContentLoaded", function () {
-                const filterDivs = document.querySelectorAll("[data-type]");
-                const documentTypeInput = document.getElementById("selected_document_type");
-                const addModal = document.getElementById("addModal");
-
-                filterDivs.forEach(div => {
-                    div.addEventListener("click", function () {
-                        const selectedType = this.getAttribute("data-type");
-                        documentTypeInput.value = selectedType;
-                    });
-                });
-                document.querySelector("form").addEventListener("submit", function () {
-                    if (!documentTypeInput.value) documentTypeInput.value = "Baptismal Certificate";
-                });
-            });
-        </script>
-</x-app-layout>
+        
+        <!-- ================= SELECT TYPE MODAL ================= -->
+        <dialog id="typeModal" class="modal">
+            <div class="modal-box max-w-md">
+                <h3 class="text-lg font-bold mb-4 text-center">Select Document Type</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="btn btn-outline"onclick="setType('Baptismal Certificate')">
+                        Baptismal Certificate
+                    </button>
+                    
+                <button class="btn btn-outline"onclick="setType('Marriage Certificate')">
+                    Marriage Certificate
+                </button>
+                
+                <button class="btn btn-outline"onclick="setType('Death Certificate')">
+                    Death Certificate
+                </button>
+                
+                <button class="btn btn-outline"onclick="setType('Confirmation Certificate')">
+                    Confirmation Certificate
+                </button>
+            </div>
+            <div class="flex justify-end mt-5">
+                <button class="btn"onclick="typeModal.close()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </dialog>
+    
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+    window.addModal  = document.getElementById("addModal");
+    window.typeModal = document.getElementById("typeModal");
+    
+    /* ===============================
+    OPEN SELECT TYPE MODAL
+    ================================*/
+    function openTypeModal() {
+        const fullName  = document.querySelector("input[name='full_name']");
+        const fileInput = document.getElementById("fileInput");
+        
+        if (!fullName.value.trim()) {
+            alert("Please enter full name.");
+            return;
+        }
+        
+        if (!fileInput.files.length) {
+            alert("Please select a file first.");
+            return;
+        }
+        typeModal.showModal();
+    }
+    
+    /* ===============================
+    DETECT TYPE FROM FILENAME
+    ================================*/
+    function detectTypeFromFilename(filename) {
+        
+        filename = filename.toLowerCase();
+        
+        if (filename.includes("bapt")) 
+        return "Baptismal Certificate";
+    
+        if (filename.includes("marriage") || filename.includes("kasal")) 
+        return "Marriage Certificate";
+    
+        if (filename.includes("death") || filename.includes("burial")) 
+        return "Death Certificate";
+    
+        if (filename.includes("confirm")) 
+        return "Confirmation Certificate";
+    
+        return null;
+    }
+    
+    /* ===============================
+    VALIDATE AND SUBMIT
+    ================================*/
+    function setType(selectedType) {
+        
+        const fileInput = document.getElementById("fileInput");
+        const filename  = fileInput.files[0].name;
+        const detectedType = detectTypeFromFilename(filename);
+        
+        // ❌ WRONG TYPE
+        if (detectedType && detectedType !== selectedType) {
+            alert("The uploaded certificate is incorrect.");
+            
+            // keep modal open 
+            typeModal.showModal();
+            return;
+        }
+        
+        // ✅ CORRECT TYPE 
+        document.getElementById("document_type").value = selectedType;
+        typeModal.close();
+        document.getElementById("addDocumentForm").submit();
+    }
+    </script>
+    </x-app-layout>
